@@ -1,3 +1,4 @@
+import CardConcept from "./concepts/card";
 import FriendConcept from "./concepts/friend";
 import PostConcept from "./concepts/post";
 import UserConcept from "./concepts/user";
@@ -8,3 +9,4 @@ export const WebSession = new WebSessionConcept();
 export const User = new UserConcept();
 export const Post = new PostConcept();
 export const Friend = new FriendConcept();
+export const Card = new CardConcept();
