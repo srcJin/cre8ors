@@ -1,5 +1,6 @@
 import { User } from "./app";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
+import { MindMapConnectionsDoc, MindMapDoc } from "./concepts/mindmap";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
 import { Router } from "./framework/router";
 
@@ -8,6 +9,27 @@ import { Router } from "./framework/router";
  * For example, it converts a {@link PostDoc} into a more readable format for the frontend.
  */
 export default class Responses {
+  /**
+   * Convert MindMapConnectionsDoc into more readable format for frontend by converting
+   * showing all cards and their connections.
+   */
+  static async mindMap(mindMap: MindMapDoc | null) {
+    if (!mindMap) {
+      return mindMap;
+    }
+    const owner = await User.getUserById(mindMap.owner);
+    const contributors = await User.idsToUsernames(mindMap.contributors);
+    return { ...mindMap, owner, contributors };
+  }
+
+  /**
+   * Convert MindMapConnectionsDoc into more readable format for frontend by converting
+   * showing all cards and their connections.
+   */
+  static async mindMapConnections(mindMapConnections: MindMapConnectionsDoc[]) {
+    return mindMapConnections.map((connections) => ({ from: connections.from, to: connections.to }));
+  }
+
   /**
    * Convert PostDoc into more readable format for the frontend by converting the author id into a username.
    */
