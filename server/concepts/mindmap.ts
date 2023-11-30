@@ -33,6 +33,16 @@ export default class MindMapConcept {
   }
 
   async connect(_id: ObjectId, from: ObjectId, to: ObjectId) {
+    const mindMap = await this.mindMap.readOne({ _id });
+    if (!mindMap) {
+      throw new NotFoundError(`Mindmap ${_id} does not exist`);
+    }
+    if (!mindMap.ideaBlocks.includes(from)) {
+      await this.addideaBlock(_id, from);
+    }
+    if (!mindMap.ideaBlocks.includes(to)) {
+      await this.addideaBlock(_id, to);
+    }
     await this.isNotConnected(_id, from, to);
     await this.connections.createOne({ mapId: _id, from, to });
     return { msg: `${from} got connected to ${to} in mindmap ${_id}` };
@@ -46,6 +56,14 @@ export default class MindMapConcept {
     return { msg: "Disconnected!" };
   }
 
+  async getIdeaBlocks(_id: ObjectId) {
+    const mindMap = await this.mindMap.readOne({ _id });
+    if (!mindMap) {
+      throw new NotFoundError(`Mindmap ${_id} does not exist`);
+    }
+    return mindMap.ideaBlocks;
+  }
+
   async addideaBlock(_id: ObjectId, ideaBlock: ObjectId) {
     const mindMap = await this.mindMap.readOne({ _id });
     if (!mindMap) {
@@ -57,6 +75,7 @@ export default class MindMapConcept {
     }
 
     ideaBlocks.push(ideaBlock);
+    await this.updateMap(_id, { ideaBlocks });
     return { msg: "ideaBlock successfully added!" };
   }
 
@@ -66,29 +85,36 @@ export default class MindMapConcept {
       throw new NotFoundError(`Mindmap ${_id} does not exist`);
     }
     const connectionsFrom = await this.getConnectionsFrom(_id, ideaBlock);
-    await this.connections.deleteMany(connectionsFrom);
+    for (const connection of connectionsFrom) {
+      await this.connections.deleteOne({ _id: connection._id });
+    }
     const connectionsTo = await this.getConnectionsTo(_id, ideaBlock);
-    await this.connections.deleteMany(connectionsTo);
+    for (const connection of connectionsTo) {
+      await this.connections.deleteOne({ _id: connection._id });
+    }
 
     const ideaBlocks = mindMap.ideaBlocks.filter((elt) => {
-      return elt.toJSON() !== ideaBlock.toString();
+      return elt.toString() !== ideaBlock.toString();
     });
+
     await this.updateMap(_id, { ideaBlocks });
     return { msg: "IdeaBlock successfully removed!" };
   }
 
   async updateTo(id_1: ObjectId, id_2: ObjectId) {
-    const mindMap1 = await this.mindMap.readOne({ id_1 });
-    const mindMap2 = await this.mindMap.readOne({ id_2 });
+    const mindMap1 = await this.mindMap.readOne({ _id: id_1 });
+    const mindMap2 = await this.mindMap.readOne({ _id: id_2 });
     if (!mindMap2 || !mindMap1) {
       throw new NotFoundError(`Can not update non-existing maps`);
     }
+
     const newIdeaBlocks = mindMap2.ideaBlocks;
     await this.updateMap(id_1, { ideaBlocks: newIdeaBlocks }); //transfer ideaBlocks
     await this.connections.deleteMany({ mapId: id_1 });
-    for (const idea of newIdeaBlocks) {
+    const connections = await this.getConnections(id_2);
+    for (const connection of connections) {
       //transfer ideaBlocks connections
-      await this.connections.updateOne({ _id: idea }, { mapId: id_1 });
+      await this.connections.updateOne({ _id: connection._id }, { mapId: id_1 });
     }
   }
 
@@ -98,14 +124,32 @@ export default class MindMapConcept {
       throw new NotFoundError(`Mindmap ${_id} does not exist`);
     }
     const ideaBlocks = mindMap.ideaBlocks;
-    let connections: MindMapConnectionsDoc[] = [];
-    for (const idea of ideaBlocks) {
-      const connectionsFrom = await this.getConnectionsFrom(_id, idea);
-      const connectionsTo = await this.getConnectionsTo(_id, idea);
-      connections = connections.concat(connectionsFrom, connectionsTo);
+    const connections: ObjectId[] = [];
+
+    for (const block of ideaBlocks) {
+      const connectionsFrom = (await this.getConnectionsFrom(_id, block)).map((elt) => elt._id);
+      for (const connection of connectionsFrom) {
+        if (!connections.includes(connection)) {
+          connections.push(connection);
+        }
+      }
+      const connectionsTo = (await this.getConnectionsTo(_id, block)).map((elt) => elt._id);
+      for (const connection of connectionsTo) {
+        if (connections.includes(connection)) {
+          connections.push(connection);
+        }
+      }
     }
 
-    return connections;
+    const result: MindMapConnectionsDoc[] = [];
+    for (const _id of connections) {
+      const connection = await this.connections.readOne({ _id });
+      if (connection) {
+        result.push(connection);
+      }
+    }
+
+    return result;
   }
 
   private async updateMap(_id: ObjectId, update: Partial<MindMapDoc>) {
