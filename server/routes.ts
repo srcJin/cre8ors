@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Friend, Post, User, WebSession } from "./app";
+import { Friend, Mindmap, Post, User, WebSession } from "./app";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
@@ -135,6 +135,55 @@ class Routes {
     const user = WebSession.getUser(session);
     const fromId = (await User.getUserByUsername(from))._id;
     return await Friend.rejectRequest(fromId, user);
+  }
+
+  //TODO: Start Mindmap
+  @Router.post("/mindmap")
+  async startProject(session: WebSessionDoc, title: string, description: string) {
+    const user = WebSession.getUser(session);
+    const mindMap = (await Mindmap.create(title, description, user, [], [])).mindMap;
+    return Responses.mindMap(mindMap);
+  }
+
+  //TODO: Add idea
+  @Router.post("/mindmap/:mapId/ideablocks")
+  async addIdeaBlock(mapId: ObjectId, ideaBlock: ObjectId) {
+    return Mindmap.addideaBlock(mapId, ideaBlock);
+  }
+
+  //TODO: Remove idea
+  @Router.delete("/mindmap/:mapId/ideablocks/:ideablock")
+  async removeIdeaBlock(mapId: ObjectId, ideablock: ObjectId) {
+    return Mindmap.removeideaBlock(mapId, ideablock);
+  }
+
+  @Router.post("/mindmap/:mapId/connect/:_id1/:_id2")
+  async connectIdeaBlock(mapId: ObjectId, _id1: ObjectId, _id2: ObjectId) {
+    return Mindmap.connect(mapId, _id1, _id2);
+  }
+
+  @Router.delete("/mindmap/:mapId/disconnect/:_id1/:_id2")
+  async disconnectIdeaBlocks(mapId: ObjectId, _id1: ObjectId, _id2: ObjectId) {
+    return Mindmap.disconnect(mapId, _id1, _id2);
+  }
+
+  @Router.get("/mindmap/:mapId")
+  async getConnections(mapId: ObjectId, newMap: ObjectId) {
+    await Mindmap.updateTo(mapId, newMap);
+    const connections = await Mindmap.getConnections(mapId);
+    return { msg: `Connections in Mindmap ${mapId}`, connections: await Responses.mindMapConnections(connections) };
+  }
+
+  @Router.get("/mindmap/:mapId/connectionsFrom/:ideablock")
+  async getConnectionsFromIdeaBlock(mapId: ObjectId, ideablock: ObjectId) {
+    const connections = await Mindmap.getConnectionsFrom(mapId, ideablock);
+    return { msg: `Connections in Mindmap ${mapId} From ${ideablock}`, connections: await Responses.mindMapConnections(connections) };
+  }
+
+  @Router.get("/mindmap/:mapId/connectionsTo/:ideablock")
+  async getConnectionsToIdeaBlock(mapId: ObjectId, ideablock: ObjectId) {
+    const connections = await Mindmap.getConnectionsTo(mapId, ideablock);
+    return { msg: `Connections in Mindmap ${mapId} To ${ideablock}`, connections: await Responses.mindMapConnections(connections) };
   }
 }
 
