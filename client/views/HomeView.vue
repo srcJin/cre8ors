@@ -9,6 +9,7 @@ const { currentUsername, isLoggedIn } = useUserStore();
   <div class="hero min-h-screen bg-base-200">
     <div class="hero-content text-center">
       <div class="max-w-md">
+        <img src="@/assets/images/LOGO.png" alt="Cre8ors Logo" class="mx-auto w-1/3 mb-4" />
         <h1 class="text-5xl font-bold">Cre8ors</h1>
         <p class="py-6">The smartest mindmap tool</p>
         <h1 v-if="isLoggedIn">Welcome {{ currentUsername }}!</h1>
