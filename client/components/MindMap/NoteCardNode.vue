@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Handle, NodeProps, Position } from "@vue-flow/core";
+import NoteCard from "./NoteCard.vue";
 import { CustomData } from "./types";
 
 const { data } = defineProps<NodeProps<CustomData>>();
@@ -7,12 +8,7 @@ const { data } = defineProps<NodeProps<CustomData>>();
 
 <template>
   <div>
-    <div className="card w-96 bg-neutral text-neutral-content">
-      <div className="card-body">
-        <h2 className="card-title">{{ data.title }}</h2>
-        <p>{{ data.text }}</p>
-      </div>
-    </div>
+    <NoteCard v-bind="data" />
     <Handle type="target" :position="Position.Top" />
     <Handle type="source" :position="Position.Bottom" />
   </div>

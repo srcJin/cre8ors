@@ -6,3 +6,7 @@ export interface CustomData {
   text: string;
 }
 export type CustomNode = Node<CustomData, {}, CustomNodeTypes>;
+
+export interface Card extends CustomData {
+  type: CustomNodeTypes;
+}
