@@ -9,7 +9,7 @@ export interface CardOptions {
 
 export interface CardDoc extends BaseDoc {
   author: ObjectId;
-  content: string; // TODO do we not? String or URL
+  content: string; // String or URL
   options?: CardOptions;
 }
 
@@ -32,6 +32,12 @@ export default class CardConcept {
     return await this.getCards({ author });
   }
 
+  async update(_id: ObjectId, update: Partial<CardDoc>) {
+    this.sanitizeUpdate(update);
+    await this.card.updateOne({ _id }, update);
+    return { msg: "Card updated successfully!" };
+  }
+
   async delete(_id: ObjectId) {
     await this.card.deleteOne({ _id });
     return { msg: "Card deleted successfully!" };
@@ -44,6 +50,16 @@ export default class CardConcept {
     }
     if (card.author.toString() !== user.toString()) {
       throw new CardAuthorNotMatchError(user, _id);
+    }
+  }
+
+  private sanitizeUpdate(update: Partial<CardDoc>) {
+    // Make sure the update cannot change the author.
+    const allowedUpdates = ["content", "options"];
+    for (const key in update) {
+      if (!allowedUpdates.includes(key)) {
+        throw new NotAllowedError(`Cannot update '${key}' field!`);
+      }
     }
   }
 }

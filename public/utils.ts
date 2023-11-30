@@ -24,6 +24,12 @@ const operations: operation[] = [
     fields: { author: "input" },
   },
   {
+    name: "Update Card",
+    endpoint: "/api/cards/:id",
+    method: "PATCH",
+    fields: { id: "input", update: { content: "input", options: { backgroundColor: "input" } } },
+  },
+  {
     name: "Delete Card",
     endpoint: "/api/cards/:id",
     method: "DELETE",

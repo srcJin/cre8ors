@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import { Router, getExpressRouter } from "./framework/router";
 
 import { Card, Post, User, WebSession } from "./app";
+import { CardDoc, CardOptions } from "./concepts/card";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
@@ -103,10 +104,17 @@ class Routes {
   }
 
   @Router.post("/cards")
-  async createCard(session: WebSessionDoc, content: string, options?: PostOptions) {
+  async createCard(session: WebSessionDoc, content: string, options?: CardOptions) {
     const user = WebSession.getUser(session);
     const created = await Card.create(user, content, options);
     return { msg: created.msg, card: await Responses.card(created.card) };
+  }
+
+  @Router.patch("/cards/:_id")
+  async updateCard(session: WebSessionDoc, _id: ObjectId, update: Partial<CardDoc>) {
+    const user = WebSession.getUser(session);
+    await Card.isAuthor(user, _id);
+    return await Card.update(_id, update);
   }
 
   @Router.delete("/cards/:_id")
