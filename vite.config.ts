@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
+        target: "http://localhost:3333", // Jin: 3000 not working on my machine, so I changed it to 3333
         changeOrigin: true,
       },
     },
