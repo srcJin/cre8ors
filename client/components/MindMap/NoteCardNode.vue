@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import NoteCard from "@/components/Card/NoteCard.vue";
 import { Handle, NodeProps, Position } from "@vue-flow/core";
-import NoteCard from "./NoteCard.vue";
 import { CustomData } from "./types";
 
 const { data } = defineProps<NodeProps<CustomData>>();

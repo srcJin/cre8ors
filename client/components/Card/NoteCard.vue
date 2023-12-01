@@ -19,13 +19,10 @@ const deleteCard = async () => {
 
 <template>
   <!-- Ref: https://daisyui.com/components/card/ -->
+  <!-- <div class="card w-96 base-100 bg-base-200 hover:shadow-2xl transition-shadow" @click="emit('editCard', props.card._id)"> -->
   <div class="card w-96 base-100 bg-base-200 hover:shadow-2xl transition-shadow" @click="emit('editCard', props.card._id)">
-    <!-- display image if image exists -->
-    <!-- <figure v-if="props.card.image" class="image-container">
-      <img :src="props.card.image" alt="Card Image" />
-    </figure> -->
     <div class="card-body">
-      <!-- <h2 class="card-title">{{ props.card.author }}</h2> -->
+      <!-- {{ props.card }} -->
       <p>{{ props.card.content }}</p>
       <div v-if="props.card.author == currentUsername" class="delete-overlay">
         <button class="delete-button" @click.stop="deleteCard">×</button>
@@ -42,34 +39,6 @@ p {
   font-weight: bold;
   font-size: 1.2em;
 }
-
-.author {
-  font-weight: bold;
-  font-size: 1.2em;
-}
-
-menu {
-  list-style-type: none;
-  display: flex;
-  flex-direction: row;
-  gap: 1em;
-  padding: 0;
-  margin: 0;
-  justify-content: center;
-}
-
-.timestamp {
-  display: flex;
-  justify-content: flex-end;
-  font-size: 0.9em;
-  font-style: italic;
-}
-
-/* .base {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-} */
 
 .base article:only-child {
   margin-left: auto;
