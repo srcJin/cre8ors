@@ -44,7 +44,7 @@ async function getCards(author?: string) {
   let i = 0;
   for (i = 0; i < cardResults.length; i++) {
     console.log("cardResults[i]=", i, cardResults[i].content);
-    cards.value[i] = { type: "note", title: cardResults[i].author, text: cardResults[i].content };
+    cards.value[i] = { type: "note", _id: cardResults[i]._id, title: cardResults[i].author, text: cardResults[i].content };
   }
   console.log("cards=", cards);
 }
@@ -73,8 +73,8 @@ onBeforeMount(async () => {
     <div class="nodes">
       <div class="overflow-x-auto">
         <div class="flex whitespace-no-wrap w-full h-[200px] px-4 gap-4">
-          <!-- <template v-for="(card, index) in cards" :key="index"> -->
-          <div v-for="card in cards" :key="card._id">
+          <div v-for="(card, index) in cards" :key="index">
+            <!-- <div v-for="card in cards" :key="card._id"> -->
             <div :draggable="true" @dragstart="onDragStart($event, card)">
               <!-- <component v-if="card.type === 'note'" :is="NoteCard" :title="card.title" :text="card.text" />
               <component v-else :is="UrlCard" :title="card.title" :text="card.text" /> -->
