@@ -17,6 +17,7 @@ const { isLoggedIn } = storeToRefs(userStore);
         <li v-if="isLoggedIn">
           <RouterLink :to="{ name: 'Settings' }"> Settings </RouterLink>
           <RouterLink :to="{ name: 'Cards' }"> Card </RouterLink>
+          <RouterLink :to="{ name: 'Mindmap' }"> Mindmap </RouterLink>
         </li>
         <li v-else>
           <RouterLink :to="{ name: 'Login' }"> Login </RouterLink>
