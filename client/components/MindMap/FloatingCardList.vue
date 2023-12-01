@@ -7,7 +7,8 @@ import { storeToRefs } from "pinia";
 import { onBeforeMount, ref } from "vue";
 import { Card } from "./types";
 
-let cards = ref<Array<Record<string, string>>>([]);
+// let cards = ref<Array<Record<string, string>>>([]);
+let cards = ref<Card[]>([]);
 let editing = ref("");
 let searchAuthor = ref("");
 
@@ -39,8 +40,13 @@ async function getCards(author?: string) {
     return;
   }
   searchAuthor.value = author ? author : "";
-  cards.value = cardResults;
   console.log("cardResults=", cardResults);
+  let i = 0;
+  for (i = 0; i < cardResults.length; i++) {
+    console.log("cardResults[i]=", i, cardResults[i].content);
+    cards.value[i] = { type: "note", title: cardResults[i].author, text: cardResults[i].content };
+  }
+  console.log("cards=", cards);
 }
 
 const onDragStart = (event: DragEvent, card: Card) => {
