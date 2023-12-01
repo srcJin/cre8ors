@@ -1,4 +1,6 @@
-# 6.1040 Social Media Frontend Starter Code
+# Cre8ors - The smartest mindmap tool
+
+https://cre8ors-61040.vercel.app/
 
 ## Getting Started
 
