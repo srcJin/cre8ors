@@ -158,7 +158,7 @@ class Routes {
   }
 
   @Router.get("/mindmap/:mapId/ideablocks")
-  async getCards(mapId: ObjectId) {
+  async getMindmapCards(mapId: ObjectId) {
     const cards = await Mindmap.getIdeaBlocks(mapId);
     return { msg: `IdeaBlocks in Mindmap ${mapId}`, cards: cards };
   }
