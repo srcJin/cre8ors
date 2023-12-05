@@ -10,5 +10,6 @@ export const WebSession = new WebSessionConcept();
 export const User = new UserConcept();
 export const Post = new PostConcept();
 export const Friend = new FriendConcept();
+export const Card = new CardConcept();
 export const Mindmap = new MindMapConcept();
 export const Card = new CardConcept();

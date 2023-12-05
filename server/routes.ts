@@ -1,11 +1,11 @@
 import { ObjectId } from "mongodb";
 
-import { Router, getExpressRouter } from "./framework/router";
-
-import { Friend, Mindmap, Post, User, WebSession } from "./app";
+import { Card, Friend, Mindmap, Post, User, WebSession } from "./app";
+import { CardDoc, CardOptions } from "./concepts/card";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
+import { Router, getExpressRouter } from "./framework/router";
 import Responses from "./responses";
 
 class Routes {
@@ -190,6 +190,39 @@ class Routes {
   @Router.patch("/mindmaps/:mapId/clear")
   async clearMap(mapId: ObjectId) {
     return Mindmap.clearMap(mapId);
+  }
+
+  @Router.get("/cards")
+  async getCards(author?: string) {
+    let cards;
+    if (author) {
+      const id = (await User.getUserByUsername(author))._id;
+      cards = await Card.getByAuthor(id);
+    } else {
+      cards = await Card.getCards({});
+    }
+    return Responses.cards(cards);
+  }
+
+  @Router.post("/cards")
+  async createCard(session: WebSessionDoc, content: string, options?: CardOptions) {
+    const user = WebSession.getUser(session);
+    const created = await Card.create(user, content, options);
+    return { msg: created.msg, card: await Responses.card(created.card) };
+  }
+
+  @Router.patch("/cards/:_id")
+  async updateCard(session: WebSessionDoc, _id: ObjectId, update: Partial<CardDoc>) {
+    const user = WebSession.getUser(session);
+    await Card.isAuthor(user, _id);
+    return await Card.update(_id, update);
+  }
+
+  @Router.delete("/cards/:_id")
+  async deleteCard(session: WebSessionDoc, _id: ObjectId) {
+    const user = WebSession.getUser(session);
+    await Card.isAuthor(user, _id);
+    return Card.delete(_id);
   }
 }
 

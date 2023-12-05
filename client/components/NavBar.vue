@@ -10,17 +10,28 @@ const { isLoggedIn } = storeToRefs(userStore);
 <template>
   <div class="navbar bg-base-100">
     <div class="flex-1">
-      <RouterLink :to="{ name: 'Home' }" class="btn btn-ghost text-xl">Cre8tors</RouterLink>
+      <RouterLink :to="{ name: 'Home' }" class="btn btn-ghost text-xl">Cre8ors</RouterLink>
     </div>
     <div class="flex-none">
-      <ul class="menu menu-horizontal px-1">
-        <li v-if="isLoggedIn">
+      <ul class="menu menu-horizontal px-1 space-x-10">
+        <div v-if="isLoggedIn">
           <RouterLink :to="{ name: 'Settings' }"> Settings </RouterLink>
-        </li>
+          <RouterLink :to="{ name: 'Mindmap' }"> Mindmap </RouterLink>
+          <RouterLink :to="{ name: 'Cards' }"> Card </RouterLink>
+        </div>
         <li v-else>
           <RouterLink :to="{ name: 'Login' }"> Login </RouterLink>
         </li>
+        <!-- Card View -->
       </ul>
     </div>
   </div>
 </template>
+
+<style scoped>
+.menu-horizontal > li {
+  display: inline-block;
+  list-style-type: none; /* Removes default list marker */
+  padding: 0; /* Resets default padding */
+}
+</style>

@@ -1,4 +1,5 @@
 import { User } from "./app";
+import { CardDoc } from "./concepts/card";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
 import { MindMapDoc } from "./concepts/mindmap";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
@@ -45,6 +46,25 @@ export default class Responses {
   static async posts(posts: PostDoc[]) {
     const authors = await User.idsToUsernames(posts.map((post) => post.author));
     return posts.map((post, i) => ({ ...post, author: authors[i] }));
+  }
+
+  /**
+   * Convert CardDoc into more readable format for the frontend by converting the author id into a username.
+   */
+  static async card(card: CardDoc | null) {
+    if (!card) {
+      return card;
+    }
+    const author = await User.getUserById(card.author);
+    return { ...card, author: author.username };
+  }
+
+  /**
+   * Same as {@link card} but for an array of CardDoc for improved performance.
+   */
+  static async cards(cards: CardDoc[]) {
+    const authors = await User.idsToUsernames(cards.map((card) => card.author));
+    return cards.map((card, i) => ({ ...card, author: authors[i] }));
   }
 
   /**
