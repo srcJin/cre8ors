@@ -137,62 +137,59 @@ class Routes {
     return await Friend.rejectRequest(fromId, user);
   }
 
-  @Router.post("/mindmap")
+  @Router.post("/mindmaps")
   async startProject(session: WebSessionDoc, title: string, description: string) {
     const user = WebSession.getUser(session);
-    const mindMap = (await Mindmap.create(title, description, user, [], [])).mindMap;
+    const mindMap = (await Mindmap.create(title, description, "", [user], [])).mindMap;
     return Responses.mindMap(mindMap);
   }
 
-  @Router.post("/mindmap/:mapId/ideablocks/:ideaBlock")
+  @Router.post("/mindmaps/:mapId/ideablocks/:ideaBlock")
   async addIdeaBlock(mapId: ObjectId, ideaBlock: ObjectId) {
-    return Mindmap.addideaBlock(mapId, ideaBlock);
+    return Mindmap.addideaBlocks(mapId, ideaBlock);
   }
 
-  @Router.delete("/mindmap/:mapId/ideablocks/:ideablock")
+  @Router.delete("/mindmaps/:mapId/ideablocks/:ideablock")
   async removeIdeaBlock(mapId: ObjectId, ideablock: ObjectId) {
     return Mindmap.removeideaBlock(mapId, ideablock);
   }
 
-  @Router.post("/mindmap/:mapId/connect/:_id1/:_id2")
-  async connectIdeaBlock(mapId: ObjectId, _id1: ObjectId, _id2: ObjectId) {
-    return Mindmap.connect(mapId, _id1, _id2);
-  }
-
-  @Router.delete("/mindmap/:mapId/disconnect/:_id1/:_id2")
-  async disconnectIdeaBlocks(mapId: ObjectId, _id1: ObjectId, _id2: ObjectId) {
-    return Mindmap.disconnect(mapId, _id1, _id2);
-  }
-
-  @Router.get("/mindmap/:mapId")
-  async getConnections(mapId: ObjectId) {
-    const connections = await Mindmap.getConnections(mapId);
-    return { msg: `Connections in Mindmap ${mapId}`, connections: await Responses.mindMapConnections(connections) };
-  }
-
-  @Router.get("/mindmap/:mapId/ideablocks")
-  async getMindmapCards(mapId: ObjectId) {
+  @Router.get("/mindmaps/:mapId/ideablocks")
+  async getCards(mapId: ObjectId) {
     const cards = await Mindmap.getIdeaBlocks(mapId);
     return { msg: `IdeaBlocks in Mindmap ${mapId}`, cards: cards };
   }
 
-  @Router.patch("/mindmap/:mapId/:newMap")
-  async updateTo(mapId: ObjectId, newMap: ObjectId) {
-    await Mindmap.updateTo(mapId, newMap);
-    const connections = await Mindmap.getConnections(mapId);
-    return { msg: `Connections in Mindmap ${mapId}`, connections: await Responses.mindMapConnections(connections) };
+  //Get Map By id
+  @Router.get("/mindmaps/:_id")
+  async getMap(_id: ObjectId) {
+    const map = await Mindmap.getMap(_id);
+    return Responses.mindMap(map);
   }
 
-  @Router.get("/mindmap/:mapId/connectionsFrom/:ideablock")
-  async getConnectionsFromIdeaBlock(mapId: ObjectId, ideablock: ObjectId) {
-    const connections = await Mindmap.getConnectionsFrom(mapId, ideablock);
-    return { msg: `Connections in Mindmap ${mapId} From ${ideablock}`, connections: await Responses.mindMapConnections(connections) };
+  //Get Maps By user
+  @Router.get("/mindmaps/user/:user")
+  async getMapByUser(user: ObjectId) {
+    const maps = await Mindmap.getMapByUser(user);
+    return maps;
   }
 
-  @Router.get("/mindmap/:mapId/connectionsTo/:ideablock")
-  async getConnectionsToIdeaBlock(mapId: ObjectId, ideablock: ObjectId) {
-    const connections = await Mindmap.getConnectionsTo(mapId, ideablock);
-    return { msg: `Connections in Mindmap ${mapId} To ${ideablock}`, connections: await Responses.mindMapConnections(connections) };
+  //Delete Map
+  @Router.delete("/mindmaps/:mapId")
+  async deleteMap(mapId: ObjectId) {
+    return Mindmap.deleteMap(mapId);
+  }
+
+  //Save Map
+  @Router.patch("/mindmaps/:mapId")
+  async save(mapId: ObjectId, content: string) {
+    return Mindmap.saveMap(mapId, content);
+  }
+
+  //Clear Map
+  @Router.patch("/mindmaps/:mapId/clear")
+  async clearMap(mapId: ObjectId) {
+    return Mindmap.clearMap(mapId);
   }
 
   @Router.get("/cards")
