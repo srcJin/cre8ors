@@ -1,3 +1,4 @@
+import CardConcept from "./concepts/card";
 import FriendConcept from "./concepts/friend";
 import MindMapConcept from "./concepts/mindmap";
 import PostConcept from "./concepts/post";
@@ -10,3 +11,4 @@ export const User = new UserConcept();
 export const Post = new PostConcept();
 export const Friend = new FriendConcept();
 export const Mindmap = new MindMapConcept();
+export const Card = new CardConcept();
