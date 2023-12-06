@@ -2,37 +2,39 @@
 import { Background } from "@vue-flow/background";
 import { Controls } from "@vue-flow/controls";
 import { VueFlow, useVueFlow } from "@vue-flow/core";
-import { nextTick, watch } from "vue";
+import { nextTick, onBeforeMount, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import CustomCardNode from "../components/MindMap/CustomCardNode.vue";
 import FloatingCardList from "../components/MindMap/FloatingCardList.vue";
-import NoteCardNode from "../components/MindMap/NoteCardNode.vue";
-import UrlCardNode from "../components/MindMap/UrlCardNode.vue";
+import { fetchy } from "../utils/fetchy";
 
-let id = 0;
-const getId = () => {
-  return `dndnode_${id++}`;
+const {
+  params: { id: mindmapId },
+} = useRoute();
+
+const generateId = (cardId: string) => {
+  return `${cardId}_${new Date().toLocaleTimeString()}`;
 };
 
-const { findNode, addNodes, project, vueFlowRef } = useVueFlow({
-  nodes: [
-    {
-      id: "1",
-      type: "note",
-      position: { x: 100, y: 100 },
-      data: {
-        title: "How to draw good mind maps",
-        text: "This is a note node. You can add notes to your mind map to help you remember things.",
-      },
+const { findNode, addNodes, project, vueFlowRef } = useVueFlow();
+
+const elements = ref([]);
+
+const saveMindmap = async () => {
+  await fetchy(`/api/mindmaps/${mindmapId}`, "PATCH", {
+    body: {
+      content: JSON.stringify(elements.value),
     },
-    {
-      id: "2",
-      type: "url",
-      position: { x: 300, y: 500 },
-      data: {
-        title: "Cre8tors",
-        text: "https://cre8tors.app",
-      },
-    },
-  ],
+  });
+};
+
+const loadMindmap = async () => {
+  const mindmap = await fetchy(`/api/mindmaps/${mindmapId}`, "GET");
+  elements.value = JSON.parse(mindmap.content);
+};
+
+onBeforeMount(async () => {
+  await loadMindmap();
 });
 
 const onDragOver = (event: DragEvent) => {
@@ -55,13 +57,12 @@ const onDrop = async (event: DragEvent) => {
   });
 
   const newNode = {
-    id: getId(),
-    type: card.type,
+    id: generateId(card.id),
+    type: "custom",
     position,
     label: `${card.type} node`,
     data: {
-      title: card.title,
-      text: card.text,
+      card,
     },
   };
 
@@ -88,17 +89,14 @@ const onDrop = async (event: DragEvent) => {
 <template>
   <main class="dndflow h-screen w-screen pt-[68px] -mt-[68px]" @drop="onDrop">
     <!-- @vue-expect-error -->
-    <VueFlow fit-view-on-init :auto-connect="true" :default-zoom="1.5" :min-zoom="0.2" :max-zoom="4" @dragover="onDragOver">
-      <template #node-note="noteNodeProps">
-        <NoteCardNode v-bind="noteNodeProps" />
-      </template>
-      <template #node-url="urlNodeProps">
-        <UrlCardNode v-bind="urlNodeProps" />
+    <VueFlow v-model="elements" fit-view-on-init :auto-connect="true" :default-zoom="0.5" :min-zoom="0.2" :max-zoom="4" @dragover="onDragOver">
+      <template #node-custom="customNodeProps">
+        <CustomCardNode v-bind="customNodeProps" />
       </template>
       <Background pattern-color="#aaa" :gap="8" />
       <Controls />
-      <button class="btn btn-primary absolute top-0 right-0 m-[15px] z-50">Save</button>
-      <FloatingCardList />
+      <button class="btn btn-primary absolute top-0 right-0 m-[15px] z-50" @click="saveMindmap">Save</button>
+      <FloatingCardList :id="mindmapId as string" />
     </VueFlow>
   </main>
 </template>

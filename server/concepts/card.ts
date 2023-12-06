@@ -3,21 +3,19 @@ import { Filter, ObjectId } from "mongodb";
 import DocCollection, { BaseDoc } from "../framework/doc";
 import { NotAllowedError, NotFoundError } from "./errors";
 
-export interface CardOptions {
-  backgroundColor?: string;
-}
-
+export type CardType = "note" | "url";
 export interface CardDoc extends BaseDoc {
   author: ObjectId;
+  title: string;
+  type: CardType;
   content: string; // String or URL
-  options?: CardOptions;
 }
 
 export default class CardConcept {
   public readonly card = new DocCollection<CardDoc>("card");
 
-  async create(author: ObjectId, content: string, options?: CardOptions) {
-    const _id = await this.card.createOne({ author, content, options });
+  async create(author: ObjectId, type: CardType, title: string, content: string) {
+    const _id = await this.card.createOne({ author, type, title, content });
     return { msg: "Card created successfully!", card: await this.card.readOne({ _id }) };
   }
 

@@ -1,8 +1,7 @@
 import { ObjectId } from "mongodb";
 
-import { Card, Friend, Mindmap, Post, User, WebSession } from "./app";
-import { CardDoc, CardOptions } from "./concepts/card";
-import { PostDoc, PostOptions } from "./concepts/post";
+import { Card, Mindmap, User, WebSession } from "./app";
+import { CardDoc, CardType } from "./concepts/card";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
 import { Router, getExpressRouter } from "./framework/router";
@@ -57,86 +56,6 @@ class Routes {
     return { msg: "Logged out!" };
   }
 
-  @Router.get("/posts")
-  async getPosts(author?: string) {
-    let posts;
-    if (author) {
-      const id = (await User.getUserByUsername(author))._id;
-      posts = await Post.getByAuthor(id);
-    } else {
-      posts = await Post.getPosts({});
-    }
-    return Responses.posts(posts);
-  }
-
-  @Router.post("/posts")
-  async createPost(session: WebSessionDoc, content: string, options?: PostOptions) {
-    const user = WebSession.getUser(session);
-    const created = await Post.create(user, content, options);
-    return { msg: created.msg, post: await Responses.post(created.post) };
-  }
-
-  @Router.patch("/posts/:_id")
-  async updatePost(session: WebSessionDoc, _id: ObjectId, update: Partial<PostDoc>) {
-    const user = WebSession.getUser(session);
-    await Post.isAuthor(user, _id);
-    return await Post.update(_id, update);
-  }
-
-  @Router.delete("/posts/:_id")
-  async deletePost(session: WebSessionDoc, _id: ObjectId) {
-    const user = WebSession.getUser(session);
-    await Post.isAuthor(user, _id);
-    return Post.delete(_id);
-  }
-
-  @Router.get("/friends")
-  async getFriends(session: WebSessionDoc) {
-    const user = WebSession.getUser(session);
-    return await User.idsToUsernames(await Friend.getFriends(user));
-  }
-
-  @Router.delete("/friends/:friend")
-  async removeFriend(session: WebSessionDoc, friend: string) {
-    const user = WebSession.getUser(session);
-    const friendId = (await User.getUserByUsername(friend))._id;
-    return await Friend.removeFriend(user, friendId);
-  }
-
-  @Router.get("/friend/requests")
-  async getRequests(session: WebSessionDoc) {
-    const user = WebSession.getUser(session);
-    return await Responses.friendRequests(await Friend.getRequests(user));
-  }
-
-  @Router.post("/friend/requests/:to")
-  async sendFriendRequest(session: WebSessionDoc, to: string) {
-    const user = WebSession.getUser(session);
-    const toId = (await User.getUserByUsername(to))._id;
-    return await Friend.sendRequest(user, toId);
-  }
-
-  @Router.delete("/friend/requests/:to")
-  async removeFriendRequest(session: WebSessionDoc, to: string) {
-    const user = WebSession.getUser(session);
-    const toId = (await User.getUserByUsername(to))._id;
-    return await Friend.removeRequest(user, toId);
-  }
-
-  @Router.put("/friend/accept/:from")
-  async acceptFriendRequest(session: WebSessionDoc, from: string) {
-    const user = WebSession.getUser(session);
-    const fromId = (await User.getUserByUsername(from))._id;
-    return await Friend.acceptRequest(fromId, user);
-  }
-
-  @Router.put("/friend/reject/:from")
-  async rejectFriendRequest(session: WebSessionDoc, from: string) {
-    const user = WebSession.getUser(session);
-    const fromId = (await User.getUserByUsername(from))._id;
-    return await Friend.rejectRequest(fromId, user);
-  }
-
   @Router.post("/mindmaps")
   async startProject(session: WebSessionDoc, title: string, description: string) {
     const user = WebSession.getUser(session);
@@ -144,9 +63,9 @@ class Routes {
     return Responses.mindMap(mindMap);
   }
 
-  @Router.post("/mindmaps/:mapId/ideablocks/:ideaBlock")
-  async addIdeaBlock(mapId: ObjectId, ideaBlock: ObjectId) {
-    return Mindmap.addideaBlocks(mapId, ideaBlock);
+  @Router.post("/mindmaps/:mapId/ideablocks")
+  async updateIdeaBlocks(mapId: ObjectId, ideaBlocks: ObjectId[]) {
+    return Mindmap.updateIdeaBlocks(mapId, ideaBlocks);
   }
 
   @Router.delete("/mindmaps/:mapId/ideablocks/:ideablock")
@@ -156,8 +75,9 @@ class Routes {
 
   @Router.get("/mindmaps/:mapId/ideablocks")
   async getIdeaBlocks(mapId: ObjectId) {
-    const cards = await Mindmap.getIdeaBlocks(mapId);
-    return { msg: `IdeaBlocks in Mindmap ${mapId}`, cards: cards };
+    const cardIds = await Mindmap.getIdeaBlocks(mapId);
+    console.log(cardIds);
+    return await Card.getCards({ _id: { $in: cardIds.map((id) => new ObjectId(id)) } });
   }
 
   //Get Map By id
@@ -168,9 +88,10 @@ class Routes {
   }
 
   //Get Maps By user
-  @Router.get("/mindmaps/user/:user")
-  async getMapByUser(user: ObjectId) {
-    const maps = await Mindmap.getMapByUser(user);
+  @Router.get("/mindmaps/user/:username")
+  async getMapByUser(username: string) {
+    const id = (await User.getUserByUsername(username))._id;
+    const maps = await Mindmap.getMapByUser(id);
     return maps;
   }
 
@@ -205,9 +126,9 @@ class Routes {
   }
 
   @Router.post("/cards")
-  async createCard(session: WebSessionDoc, content: string, options?: CardOptions) {
+  async createCard(session: WebSessionDoc, title: string, type: CardType, content: string) {
     const user = WebSession.getUser(session);
-    const created = await Card.create(user, content, options);
+    const created = await Card.create(user, type, title, content);
     return { msg: created.msg, card: await Responses.card(created.card) };
   }
 

@@ -21,7 +21,7 @@ onBeforeMount(async () => {
 
 <template>
   <NavBar />
-  <div v-if="toast !== null" class="toast toast-top toast-end">
+  <div v-if="toast !== null" class="toast toast-top toast-center">
     <div class="alert" :class="toast.style === 'success' ? 'alert-success' : 'alert-error'">
       <span>{{ toast.message }}</span>
     </div>

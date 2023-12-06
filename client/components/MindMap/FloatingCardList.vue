@@ -1,53 +1,55 @@
 <script setup lang="ts">
-import EditNoteCard from "@/components/Card/EditNoteCard.vue";
-import NoteCard from "@/components/Card/NoteCard.vue";
-import { useUserStore } from "@/stores/user";
-import { fetchy } from "@/utils/fetchy";
 import { storeToRefs } from "pinia";
-import { onBeforeMount, ref } from "vue";
-import { Card } from "./types";
+import { computed, onBeforeMount, ref } from "vue";
+import { useCardStore } from "../../stores/card";
+import { Card } from "../../types/card";
+import { fetchy } from "../../utils/fetchy";
+import CardComponent from "../Card/CardComponent.vue";
 
-// let cards = ref<Array<Record<string, string>>>([]);
-let cards: Card[] = [];
-let editing = ref("");
-let searchAuthor = ref("");
+const { id } = defineProps<{ id: string }>();
 
-function updateEditing(id: string) {
-  editing.value = id;
-}
-const { isLoggedIn } = storeToRefs(useUserStore());
+const cardStore = useCardStore();
+const { loadCards } = cardStore;
+const { cards } = storeToRefs(cardStore);
+const isChecked = ref<Record<string, boolean>>({});
 
-const loaded = ref(false);
+const ideablocks = ref<Card[]>([]);
+const searchText = ref("");
+const filteredIdeablocks = computed(() => {
+  return ideablocks.value.filter((block) => block.title.toLowerCase().includes(searchText.value.toLowerCase()) || block.content.toLowerCase().includes(searchText.value.toLowerCase()));
+});
 
-// const cards: Card[] = [
-//   { type: "note", title: "Note", text: "This is a note" },
-//   { type: "note", title: "Note", text: "This is a note" },
-//   { type: "url", title: "URL", text: "https://www.google.com" },
-//   { type: "note", title: "URL", text: "https://www.google.com" },
-//   { type: "url", title: "URL", text: "https://www.google.com" },
-//   { type: "note", title: "Note", text: "This is a note" },
-//   { type: "note", title: "URL", text: "https://www.google.com" },
-//   { type: "note", title: "Note", text: "This is a note" },
-//   { type: "url", title: "URL", text: "https://www.google.com" },
-// ];
+const loadIdeaBlocks = async () => {
+  ideablocks.value = await fetchy(`/api/mindmaps/${id}/ideablocks`, "GET");
+};
 
-async function getCards(author?: string) {
-  let query: Record<string, string> = author !== undefined ? { author } : {};
-  let cardResults;
-  try {
-    cardResults = await fetchy("/api/cards", "GET", { query });
-  } catch (_) {
-    return;
-  }
-  searchAuthor.value = author ? author : "";
-  console.log("cardResults=", cardResults);
-  let i = 0;
-  for (i = 0; i < cardResults.length; i++) {
-    console.log("cardResults[i]=", i, cardResults[i].content);
-    cards[i] = { type: "note", _id: cardResults[i]._id, title: cardResults[i].author, text: cardResults[i].content };
-  }
-  console.log("cards=", cards);
-}
+const importCards = async () => {
+  const selectedCards = Object.entries(isChecked.value)
+    .filter(([, value]) => value)
+    .map(([key]) => key);
+  await fetchy(`/api/mindmaps/${id}/ideablocks`, "POST", {
+    body: {
+      ideaBlocks: selectedCards,
+    },
+  });
+  await loadIdeaBlocks();
+};
+
+const resetIsChecked = () => {
+  isChecked.value = cards.value.reduce(
+    (acc, card) => {
+      acc[card._id] = ideablocks.value.some((block) => block._id === card._id);
+      return acc;
+    },
+    {} as Record<string, boolean>,
+  );
+};
+
+onBeforeMount(async () => {
+  await loadIdeaBlocks();
+  await loadCards();
+  resetIsChecked();
+});
 
 const onDragStart = (event: DragEvent, card: Card) => {
   if (event.dataTransfer) {
@@ -56,33 +58,43 @@ const onDragStart = (event: DragEvent, card: Card) => {
     event.dataTransfer.effectAllowed = "move";
   }
 };
-
-onBeforeMount(async () => {
-  await getCards();
-  loaded.value = true;
-});
 </script>
 
 <template>
   <div class="overlay">
-    <div class="flex flex-row justify-between">
-      <input type="text" placeholder="Search..." className="input input-bordered w-full max-w-xs mx-4 mb-4" />
-      <p class="font-semibold text-info pt-3">Drag and drop to add cards to the mind map.</p>
-      <div class="w-80"></div>
-    </div>
-    <div class="nodes">
-      <div class="overflow-x-auto">
-        <div class="flex whitespace-no-wrap w-full h-[200px] px-4 gap-4">
-          <!-- <div v-for="(card, index) in cards" :key="index"> -->
-          <div v-for="card in cards" :key="card._id">
-            <div :draggable="true" @dragstart="onDragStart($event, card)">
-              <!-- <component v-if="card.type === 'note'" :is="NoteCard" :title="card.title" :text="card.text" />
-              <component v-else :is="UrlCard" :title="card.title" :text="card.text" /> -->
-              <NoteCard class="card" v-if="editing !== card._id" :card="card" @refreshCards="getCards" @editCard="updateEditing" />
-              <EditNoteCard class="card" v-else :card="card" @refreshCards="getCards" @editCard="updateEditing" />
+    <div className="flex flex-col justify-between w-full h-full">
+      <div class="flex flex-row justify-between px-6">
+        <input type="text" placeholder="Search..." className="input input-bordered w-full max-w-xs" v-model="searchText" />
+        <p class="font-semibold text-info pt-3">Drag and drop to add cards to the mind map.</p>
+        <button class="btn btn-accent btn-md ml-20" @click="resetIsChecked" onclick="import_card_modal.showModal()">Import cards</button>
+        <dialog id="import_card_modal" class="modal">
+          <div class="modal-box">
+            <form method="dialog">
+              <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <div className="flex flex-col">
+              <div className="flex flex-row items-center gap-4 w-full" v-for="card in cards" :key="card._id">
+                <CardComponent :card="card" />
+                <input type="checkbox" v-model="isChecked[card._id]" class="checkbox" />
+              </div>
+            </div>
+            <div class="modal-action">
+              <form method="dialog">
+                <button class="btn btn-accent mr-4" @click="importCards">Update</button>
+              </form>
             </div>
           </div>
-          <!-- </template> -->
+        </dialog>
+      </div>
+      <div class="nodes">
+        <div class="overflow-x-auto">
+          <div class="flex whitespace-no-wrap w-full h-[200px] px-4 gap-4">
+            <div v-for="block in filteredIdeablocks" :key="block._id">
+              <div className="w-80 flex" :draggable="true" @dragstart="onDragStart($event, block)">
+                <CardComponent :card="block" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -99,7 +111,7 @@ onBeforeMount(async () => {
   backdrop-filter: blur(15px);
   background-color: rgba(256, 256, 256, 0.5); /* Set a transparent background color */
   box-shadow: 0px -6px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px 0;
+  padding: 20px 0 0 0;
 }
 .card {
   min-height: 150px;

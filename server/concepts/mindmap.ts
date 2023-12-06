@@ -30,15 +30,12 @@ export default class MindMapConcept {
 
   // Get Mindmap by User (TO ASK)
   async getMapByUser(user: ObjectId) {
-    const maps = await this.mindMap.readMany({ contributors: { $exists: true } });
-    const usermaps: MindMapDoc[] = [];
-    for (const map of maps) {
-      const contributors = map.contributors;
-      if (contributors.includes(user)) {
-        usermaps.push(map);
-      }
-    }
-    return usermaps;
+    return await this.mindMap.readMany(
+      { contributors: { $in: [user] } },
+      {
+        sort: { dateUpdated: -1 },
+      },
+    );
     // return this.mindMap.readMany({ contributors: { $in: [user] } });
   }
 
@@ -77,17 +74,11 @@ export default class MindMapConcept {
   }
 
   //Add a list of ideablocks to MindMap
-  async addideaBlocks(_id: ObjectId, ideaBlock: ObjectId) {
+  async updateIdeaBlocks(_id: ObjectId, ideaBlocks: ObjectId[]) {
     const mindMap = await this.mindMap.readOne({ _id });
     if (!mindMap) {
       throw new NotFoundError(`Mindmap ${_id} does not exist`);
     }
-    const ideaBlocks = mindMap.ideaBlocks;
-    if (ideaBlocks.includes(ideaBlock)) {
-      throw new AlreadyAddedError(ideaBlock);
-    }
-
-    ideaBlocks.push(ideaBlock);
     await this.updateMap(_id, { ideaBlocks });
     return { msg: "ideaBlock successfully added!" };
   }
