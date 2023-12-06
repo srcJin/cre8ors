@@ -18,7 +18,7 @@ const generateId = (cardId: string) => {
 
 const { findNode, addNodes, project, vueFlowRef } = useVueFlow();
 
-const elements = ref([]);
+let elements = ref([]);
 
 const saveMindmap = async () => {
   await fetchy(`/api/mindmaps/${mindmapId}`, "PATCH", {
@@ -28,9 +28,110 @@ const saveMindmap = async () => {
   });
 };
 
+// Mindmap for testing
+// let elements = ref<Elements>([
+//   // nodes
+//   // an input node, specified by using `type: 'input'`
+//   { id: "1", type: "input", label: "Node 1", position: { x: 250, y: 5 } },
+//   // default node, you can omit `type: 'default'` as it's the fallback type
+//   { id: "2", label: "Node 2", position: { x: 140, y: 200 } },
+//   { id: "3", type: "output", label: "Node 3", position: { x: 50, y: 600 } },
+
+//   // A custom node, specified by using a custom type name
+//   // we choose `type: 'special'` for this example
+//   {
+//     id: "4",
+//     type: "special",
+//     label: "Node 4",
+//     position: { x: 400, y: 200 },
+//     // pass custom data to the node
+//     data: {
+//       // you can pass any data you want to the node
+//       hello: "world",
+//     },
+//   },
+//   // An output node, specified by using `type: 'output'`
+//   { id: "5", type: "output", label: "Node 5", position: { x: 420, y: 300 } },
+//   { id: "6", type: "output", label: "Node 6", position: { x: 20, y: 400 } },
+//   { id: "7", type: "output", label: "Node 7", position: { x: 100, y: 80 } },
+
+//   // edges
+//   // simple default bezier edge
+//   // consists of an id, source-id and target-id
+//   { id: "e1-3", source: "1", target: "3" },
+//   // an animated edge, specified by using `animated: true`
+//   { id: "e1-2", source: "1", target: "2", animated: true },
+//   // a custom edge, specified by using a custom type name
+//   // we choose `type: 'special'` for this example
+//   {
+//     id: "e1-4",
+//     type: "special",
+//     source: "1",
+//     target: "4",
+//     // pass custom data to the edge
+//     data: {
+//       // You can pass any data you want to the edge
+//       hello: "world",
+//     },
+//   },
+// ]);
+
 const loadMindmap = async () => {
   const mindmap = await fetchy(`/api/mindmaps/${mindmapId}`, "GET");
   elements.value = JSON.parse(mindmap.content);
+};
+
+const suggestRandomConnection = () => {
+  // Filter out elements that have a 'position' property, assuming these are nodes
+  const nodes = elements.value.filter((el) => el.position);
+
+  if (nodes.length < 2) {
+    console.log("Not enough nodes to form a connection");
+    return;
+  }
+
+  let randomNode1, randomNode2;
+  do {
+    randomNode1 = nodes[Math.floor(Math.random() * nodes.length)];
+    randomNode2 = nodes[Math.floor(Math.random() * nodes.length)];
+  } while (randomNode1.id === randomNode2.id || areNodesConnected(randomNode1, randomNode2));
+
+  const newEdge = {
+    id: `e${randomNode1.id}-${randomNode2.id}`,
+    source: randomNode1.id,
+    target: randomNode2.id,
+    type: "special", // Set the type to 'special'
+    animated: true,
+    // Add any additional properties required for special type edges
+    data: {
+      customProperty: "suggested", // Example custom property
+    },
+  };
+
+  elements.value = [...elements.value, newEdge];
+};
+
+const areNodesConnected = (node1: any, node2: any) => {
+  return elements.value.some((el) => (el.source === node1.id && el.target === node2.id) || (el.source === node2.id && el.target === node1.id));
+};
+
+const updateMindmap = () => {
+  // Filter out edges from the elements
+  const edges = elements.value.filter((el) => !el.position);
+
+  // Loop through each edge and update special edges to default type
+  const updatedEdges = edges.map((edge) => {
+    if (edge.type === "special") {
+      console.log("Updating special edge to default type", edge);
+      // If it is a special edge, update its type to 'default' and turn off animation
+      return { ...edge, type: "default", animated: false };
+    }
+    // Keep the edge as it is if it is not a special edge
+    return edge;
+  });
+
+  // Combine the updated edges with the original nodes
+  elements.value = [...elements.value.filter((el) => el.position), ...updatedEdges];
 };
 
 onBeforeMount(async () => {
@@ -97,8 +198,11 @@ const onDrop = async (event: DragEvent) => {
       <Controls />
       <div class="flex flex-col items-end m-[15px] top-0 right-0 z-50 pr-4 absolute">
         <button class="btn btn-primary mb-2" @click="saveMindmap">Save</button>
-        <button class="btn btn-primary mb-2">Load</button>
-        <button class="btn btn-primary">Suggest</button>
+        <!-- @TODO - Load button -->
+        <button class="btn btn-primary mb-2" @click="loadMindmap">Revert</button>
+        <!-- @ TODO - Suggest button -->
+        <button class="btn btn-primary mb-2" @click="suggestRandomConnection">Suggest</button>
+        <button class="btn btn-primary mb-2" @click="updateMindmap">Accept</button>
       </div>
       <FloatingCardList :id="mindmapId as string" />
     </VueFlow>
@@ -113,5 +217,20 @@ const onDrop = async (event: DragEvent) => {
 .vue-flow__panel {
   top: 0px;
   bottom: unset !important;
+}
+
+.vue-flow__handle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.vue-flow__edge-path,
+.vue-flow__connection-path {
+  stroke: #b1b1b7;
+  stroke-width: 5px;
+  opacity: 1;
+  fill: none;
 }
 </style>
