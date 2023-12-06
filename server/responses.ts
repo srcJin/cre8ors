@@ -1,7 +1,7 @@
 import { User } from "./app";
 import { CardDoc } from "./concepts/card";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
-import { MindMapConnectionsDoc, MindMapDoc } from "./concepts/mindmap";
+import { MindMapDoc } from "./concepts/mindmap";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
 import { Router } from "./framework/router";
 
@@ -18,17 +18,15 @@ export default class Responses {
     if (!mindMap) {
       return mindMap;
     }
-    const owner = await User.getUserById(mindMap.owner);
     const contributors = await User.idsToUsernames(mindMap.contributors);
-    return { ...mindMap, owner, contributors };
+    return { ...mindMap, contributors };
   }
 
   /**
-   * Convert MindMapConnectionsDoc into more readable format for frontend by converting
-   * showing all cards and their connections.
+   * Same as {@link mindMap} but for an array of MindMapDoc for improved performance.
    */
-  static async mindMapConnections(mindMapConnections: MindMapConnectionsDoc[]) {
-    return mindMapConnections.map((connections) => ({ from: connections.from, to: connections.to }));
+  static async mindMaps(mindMaps: MindMapDoc[]) {
+    return mindMaps.map((map) => this.mindMap(map));
   }
 
   /**
