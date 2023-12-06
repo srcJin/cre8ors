@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useUserStore } from "@/stores/user";
+import { fetchy } from "@/utils/fetchy";
 import { storeToRefs } from "pinia";
-import { fetchy } from "../../utils/fetchy";
 
 const props = defineProps(["card"]);
 const emit = defineEmits(["editCard", "refreshCards"]);

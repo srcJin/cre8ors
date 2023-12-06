@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { fetchy } from "@/utils/fetchy";
 import { storeToRefs } from "pinia";
 import { computed, onBeforeMount, ref } from "vue";
 import { useCardStore } from "../../stores/card";
 import { Card } from "../../types/card";
-import { fetchy } from "../../utils/fetchy";
 import CardComponent from "../Card/CardComponent.vue";
 
 const { id } = defineProps<{ id: string }>();

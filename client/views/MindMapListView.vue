@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { fetchy } from "@/utils/fetchy";
 import { storeToRefs } from "pinia";
 import { onBeforeMount, ref } from "vue";
 import { useUserStore } from "../stores/user";
 import { MindMap } from "../types/mindmap";
-import { fetchy } from "../utils/fetchy";
 
 const mindmaps = ref<MindMap[]>([]);
 const title = ref("");

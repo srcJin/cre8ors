@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { fetchy } from "@/utils/fetchy";
 import { Background } from "@vue-flow/background";
 import { Controls } from "@vue-flow/controls";
 import { VueFlow, useVueFlow } from "@vue-flow/core";
@@ -6,7 +7,6 @@ import { nextTick, onBeforeMount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import CustomCardNode from "../components/MindMap/CustomCardNode.vue";
 import FloatingCardList from "../components/MindMap/FloatingCardList.vue";
-import { fetchy } from "../utils/fetchy";
 
 const {
   params: { id: mindmapId },
