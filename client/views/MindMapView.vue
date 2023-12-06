@@ -18,7 +18,7 @@ const generateId = (cardId: string) => {
 
 const { findNode, addNodes, project, vueFlowRef } = useVueFlow();
 
-let elements = ref([]);
+let elements = ref<any>([]);
 
 const saveMindmap = async () => {
   await fetchy(`/api/mindmaps/${mindmapId}`, "PATCH", {
@@ -81,9 +81,36 @@ const loadMindmap = async () => {
   elements.value = JSON.parse(mindmap.content);
 };
 
+const updateMindmap = () => {
+  // Filter out edges from the elements
+  const edges = elements.value.filter((el: any) => !el.position);
+
+  // Loop through each edge and update special edges to default type
+  const updatedEdges = edges.map((edge: any) => {
+    if (edge.type === "special") {
+      console.log("Updating special edge to default type", edge);
+      // If it is a special edge, update its type to 'default' and turn off animation
+      return { ...edge, type: "default", animated: false };
+    }
+    // Keep the edge as it is if it is not a special edge
+    return edge;
+  });
+
+  // Combine the updated edges with the original nodes
+  elements.value = [...elements.value.filter((el: any) => el.position), ...updatedEdges];
+};
+
+const removeAllNodes = () => {
+  elements.value = elements.value.filter((el: any) => !el.position);
+};
+
+const removeAllEdges = () => {
+  elements.value = elements.value.filter((el: any) => el.position);
+};
+
 const suggestRandomConnection = () => {
   // Filter out elements that have a 'position' property, assuming these are nodes
-  const nodes = elements.value.filter((el) => el.position);
+  const nodes = elements.value.filter((el: any) => el.position);
 
   if (nodes.length < 2) {
     console.log("Not enough nodes to form a connection");
@@ -111,27 +138,85 @@ const suggestRandomConnection = () => {
   elements.value = [...elements.value, newEdge];
 };
 
-const areNodesConnected = (node1: any, node2: any) => {
-  return elements.value.some((el) => (el.source === node1.id && el.target === node2.id) || (el.source === node2.id && el.target === node1.id));
+const suggestConnection = async () => {
+  // Filter out elements that have a 'position' property, assuming these are nodes
+  const nodes = elements.value.filter((el: any) => el.position);
+
+  if (nodes.length < 2) {
+    console.log("Not enough nodes to form a connection");
+    return;
+  }
+
+  // Define a threshold for forming a connection
+  const threshold = 0.9; // Example threshold, can be adjusted
+
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const node1 = nodes[i];
+      const node2 = nodes[j];
+
+      if (!areNodesConnected(node1, node2)) {
+        console.log("node1", node1);
+        const score = await findConnectedNodes(node1.data.card.content, node2.data.card.content);
+
+        if (score >= threshold) {
+          const newEdge = {
+            id: `e${node1.id}-${node2.id}`,
+            source: node1.id,
+            target: node2.id,
+            type: "special", // Set the type to 'special'
+            animated: true,
+            data: {
+              customProperty: "suggested", // Example custom property
+            },
+          };
+
+          elements.value = [...elements.value, newEdge];
+        }
+      }
+    }
+  }
 };
 
-const updateMindmap = () => {
-  // Filter out edges from the elements
-  const edges = elements.value.filter((el) => !el.position);
+const areNodesConnected = (node1: any, node2: any) => {
+  return elements.value.some((el: any) => (el.source === node1.id && el.target === node2.id) || (el.source === node2.id && el.target === node1.id));
+};
 
-  // Loop through each edge and update special edges to default type
-  const updatedEdges = edges.map((edge) => {
-    if (edge.type === "special") {
-      console.log("Updating special edge to default type", edge);
-      // If it is a special edge, update its type to 'default' and turn off animation
-      return { ...edge, type: "default", animated: false };
-    }
-    // Keep the edge as it is if it is not a special edge
-    return edge;
-  });
+const findConnectedNodes = async (string1: string, string2: string) => {
+  // @ TODO now read the contents of each nodes, and use nlp packages to analyse their relationships, and recomment suggestions
+  // Prepare the data to be sent to the backend
+  const payload = {
+    content1: string1,
+    content2: string2,
+  };
+  console.log("findConnectedNodes Payload:", payload);
+  // Now just return a random number for testing between 0 and 1
+  const score = Math.random();
+  console.log("findConnectedNodes Score:", score);
+  return score;
+  // To be implemented in the backend
+  // try {
+  //   // Send the data to your backend NLP service
+  //   const response = await fetch("/api/suggest", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify(payload),
+  //   });
 
-  // Combine the updated edges with the original nodes
-  elements.value = [...elements.value.filter((el) => el.position), ...updatedEdges];
+  //   if (!response.ok) {
+  //     throw new Error(`HTTP error! status: ${response.status}`);
+  //   }
+
+  //   const { score } = await response.json();
+
+  //   // Return the relationship score from the backend
+  //   return score;
+  // } catch (error) {
+  //   console.error("Error during relationship scoring:", error);
+  //   return null; // or handle the error as needed
+  // }
 };
 
 onBeforeMount(async () => {
@@ -201,8 +286,10 @@ const onDrop = async (event: DragEvent) => {
         <!-- @TODO - Load button -->
         <button class="btn btn-primary mb-2" @click="loadMindmap">Revert</button>
         <!-- @ TODO - Suggest button -->
-        <button class="btn btn-primary mb-2" @click="suggestRandomConnection">Suggest</button>
+        <button class="btn btn-primary mb-2" @click="suggestConnection">Suggest</button>
         <button class="btn btn-primary mb-2" @click="updateMindmap">Accept</button>
+        <button class="btn btn-warning mb-2" @click="removeAllNodes">Remove All Nodes</button>
+        <button class="btn btn-warning mb-2" @click="removeAllEdges">Remove All Edges</button>
       </div>
       <FloatingCardList :id="mindmapId as string" />
     </VueFlow>
