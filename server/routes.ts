@@ -1,11 +1,10 @@
 import { ObjectId } from "mongodb";
 
-import { Router, getExpressRouter } from "./framework/router";
-
 import { Autosuggestion, Card, Mindmap, User, WebSession } from "./app";
-import { CardDoc } from "./concepts/card";
+import { CardDoc, CardType } from "./concepts/card";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
+import { Router, getExpressRouter } from "./framework/router";
 import Responses from "./responses";
 
 class Routes {
@@ -156,9 +155,14 @@ class Routes {
   }
 
   // TODO: Fix Mindmap doesn't have Mindmap.addideaBlock
+  // @Router.post("/autosuggestion/accept")
+  // async accept(mapId: ObjectId, cardId: ObjectId) {
+  //   return Mindmap.addideaBlock(mapId, cardId);
+  // }
+
   @Router.post("/autosuggestion/accept")
   async accept(mapId: ObjectId, cardId: ObjectId) {
-    return Mindmap.addideaBlock(mapId, cardId);
+    return console.log("autosuggestion accept, mapId, cardId", mapId, cardId);
   }
 
   @Router.post("/autosuggestion/reject")
