@@ -7,6 +7,12 @@ const title = ref("");
 const type = ref<CardType>(CardType.note);
 const content = ref("");
 const { createCard } = useCardStore();
+const onSubmit = async () => {
+  await createCard(title.value, type.value, content.value);
+  title.value = "";
+  type.value = CardType.note;
+  content.value = "";
+};
 </script>
 
 <template>
@@ -24,7 +30,7 @@ const { createCard } = useCardStore();
       <div class="modal-action">
         <form method="dialog">
           <button class="btn mr-4">Close</button>
-          <button class="btn btn-primary" @click="createCard(title, type, content)">Add</button>
+          <button class="btn btn-primary" @click="onSubmit">Add</button>
         </form>
       </div>
     </div>

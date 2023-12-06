@@ -87,9 +87,10 @@ class Routes {
   }
 
   //Get Maps By user
-  @Router.get("/mindmaps/user/:user")
-  async getMapByUser(user: ObjectId) {
-    const maps = await Mindmap.getMapByUser(user);
+  @Router.get("/mindmaps/user/:username")
+  async getMapByUser(username: string) {
+    const id = (await User.getUserByUsername(username))._id;
+    const maps = await Mindmap.getMapByUser(id);
     return maps;
   }
 

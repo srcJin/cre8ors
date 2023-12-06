@@ -5,7 +5,7 @@ import { useUserStore } from "@/stores/user";
 import CardView from "../views/CardView.vue";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/LoginView.vue";
-import MindMapView from "../views/MindMapView.vue";
+import MindMapListViewVue from "../views/MindMapListView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import SettingView from "../views/SettingView.vue";
 
@@ -25,15 +25,16 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: "/card",
+      path: "/cards",
       name: "Cards",
       component: CardView,
       meta: { requiresAuth: true },
     },
     {
-      path: "/mindmap",
-      name: "Mindmap",
-      component: MindMapView,
+      path: "/mindmaps",
+      name: "Mindmaps",
+      component: MindMapListViewVue,
+      meta: { requiresAuth: true },
     },
     {
       path: "/login",

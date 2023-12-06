@@ -16,7 +16,7 @@ const { isLoggedIn } = storeToRefs(userStore);
       <ul class="menu menu-horizontal px-1 space-x-10">
         <template v-if="isLoggedIn">
           <RouterLink :to="{ name: 'Cards' }">Card </RouterLink>
-          <RouterLink :to="{ name: 'Mindmap' }">Mindmap </RouterLink>
+          <RouterLink :to="{ name: 'Mindmaps' }">Mindmap </RouterLink>
           <RouterLink :to="{ name: 'Settings' }">Settings </RouterLink>
         </template>
         <template v-else>
