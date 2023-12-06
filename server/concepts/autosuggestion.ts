@@ -27,7 +27,7 @@ export default class AutosuggestionConcept {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer YOUR_API_KEY", // TODO replace with our actual API key
+            Authorization: "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", // TODO replace with our actual API key
           },
         },
       );
