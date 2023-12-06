@@ -52,7 +52,7 @@ onBeforeMount(async () => {
         </div>
         <div className="flex flex-col gap-2 pr-4">
           <button class="btn btn-error btn-sm w-full" @click="deleteMindMap(mindmap._id)">Delete</button>
-          <RouterLink :to="`/mindmaps/${mindmap._id}`">
+          <RouterLink :to="{ name: 'Mindmap', params: { id: mindmap._id } }">
             <button class="btn btn-neutral btn-sm w-full">Open</button>
           </RouterLink>
         </div>

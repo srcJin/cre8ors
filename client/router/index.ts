@@ -6,6 +6,7 @@ import CardView from "../views/CardView.vue";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/LoginView.vue";
 import MindMapListViewVue from "../views/MindMapListView.vue";
+import MindMapViewVue from "../views/MindMapView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import SettingView from "../views/SettingView.vue";
 
@@ -34,6 +35,12 @@ const router = createRouter({
       path: "/mindmaps",
       name: "Mindmaps",
       component: MindMapListViewVue,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/mindmaps/:id",
+      name: "Mindmap",
+      component: MindMapViewVue,
       meta: { requiresAuth: true },
     },
     {

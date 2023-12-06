@@ -63,9 +63,9 @@ class Routes {
     return Responses.mindMap(mindMap);
   }
 
-  @Router.post("/mindmaps/:mapId/ideablocks/:ideaBlock")
-  async addIdeaBlock(mapId: ObjectId, ideaBlock: ObjectId) {
-    return Mindmap.addideaBlocks(mapId, ideaBlock);
+  @Router.post("/mindmaps/:mapId/ideablocks")
+  async updateIdeaBlocks(mapId: ObjectId, ideaBlocks: ObjectId[]) {
+    return Mindmap.updateIdeaBlocks(mapId, ideaBlocks);
   }
 
   @Router.delete("/mindmaps/:mapId/ideablocks/:ideablock")
@@ -75,8 +75,9 @@ class Routes {
 
   @Router.get("/mindmaps/:mapId/ideablocks")
   async getIdeaBlocks(mapId: ObjectId) {
-    const cards = await Mindmap.getIdeaBlocks(mapId);
-    return { msg: `IdeaBlocks in Mindmap ${mapId}`, cards: cards };
+    const cardIds = await Mindmap.getIdeaBlocks(mapId);
+    console.log(cardIds);
+    return await Card.getCards({ _id: { $in: cardIds.map((id) => new ObjectId(id)) } });
   }
 
   //Get Map By id

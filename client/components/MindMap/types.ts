@@ -1,13 +1,8 @@
 import type { Node } from "@vue-flow/core";
+import { Card } from "../../types/card";
 
-export type CustomNodeTypes = "note" | "url";
+export type CustomNodeTypes = "custom";
 export interface CustomData {
-  _id: string;
-  title: string;
-  text: string;
+  card: Card;
 }
 export type CustomNode = Node<CustomData, {}, CustomNodeTypes>;
-
-export interface Card extends CustomData {
-  type: CustomNodeTypes;
-}
