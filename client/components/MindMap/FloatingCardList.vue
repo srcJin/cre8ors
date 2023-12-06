@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { onBeforeMount, ref } from "vue";
+import { computed, onBeforeMount, ref } from "vue";
 import { useCardStore } from "../../stores/card";
 import { Card } from "../../types/card";
 import { fetchy } from "../../utils/fetchy";
@@ -14,6 +14,10 @@ const { cards } = storeToRefs(cardStore);
 const isChecked = ref<Record<string, boolean>>({});
 
 const ideablocks = ref<Card[]>([]);
+const searchText = ref("");
+const filteredIdeablocks = computed(() => {
+  return ideablocks.value.filter((block) => block.title.toLowerCase().includes(searchText.value.toLowerCase()) || block.content.toLowerCase().includes(searchText.value.toLowerCase()));
+});
 
 const loadIdeaBlocks = async () => {
   ideablocks.value = await fetchy(`/api/mindmaps/${id}/ideablocks`, "GET");
@@ -60,7 +64,7 @@ const onDragStart = (event: DragEvent, card: Card) => {
   <div class="overlay">
     <div className="flex flex-col justify-between w-full h-full">
       <div class="flex flex-row justify-between px-6">
-        <input type="text" placeholder="Search..." className="input input-bordered w-full max-w-xs" />
+        <input type="text" placeholder="Search..." className="input input-bordered w-full max-w-xs" v-model="searchText" />
         <p class="font-semibold text-info pt-3">Drag and drop to add cards to the mind map.</p>
         <button class="btn btn-accent btn-md ml-20" @click="resetIsChecked" onclick="import_card_modal.showModal()">Import cards</button>
         <dialog id="import_card_modal" class="modal">
@@ -85,7 +89,7 @@ const onDragStart = (event: DragEvent, card: Card) => {
       <div class="nodes">
         <div class="overflow-x-auto">
           <div class="flex whitespace-no-wrap w-full h-[200px] px-4 gap-4">
-            <div v-for="block in ideablocks" :key="block._id">
+            <div v-for="block in filteredIdeablocks" :key="block._id">
               <div className="w-80 flex" :draggable="true" @dragstart="onDragStart($event, block)">
                 <CardComponent :card="block" />
               </div>
