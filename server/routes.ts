@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Card, Mindmap, Post, User, WebSession } from "./app";
+import { Autosuggestion, Card, Mindmap, Post, User, WebSession } from "./app";
 import { CardDoc, CardOptions } from "./concepts/card";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
@@ -180,6 +180,25 @@ class Routes {
   async getConnectionsToIdeaBlock(mapId: ObjectId, ideablock: ObjectId) {
     const connections = await Mindmap.getConnectionsTo(mapId, ideablock);
     return { msg: `Connections in Mindmap ${mapId} To ${ideablock}`, connections: await Responses.mindMapConnections(connections) };
+  }
+
+  @Router.post("/autosuggestion/suggest")
+  async suggest(mapId: ObjectId) {
+    const cards = await Mindmap.getIdeaBlocks(mapId);
+    const cardDocs = await Promise.all(cards.map(async (card) => (await Card.getCards(card))[0]));
+    const cardContents = cardDocs.map((card) => card.content);
+    const suggestion = await Autosuggestion.suggest(cardContents);
+    return suggestion.autosuggestion;
+  }
+
+  @Router.post("/autosuggestion/accept")
+  async accept(mapId: ObjectId, cardId: ObjectId) {
+    return Mindmap.addideaBlock(mapId, cardId);
+  }
+
+  @Router.post("/autosuggestion/reject")
+  async reject() {
+    return await Autosuggestion.reject();
   }
 }
 
