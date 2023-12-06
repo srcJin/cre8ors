@@ -88,7 +88,7 @@ const onDrop = async (event: DragEvent) => {
 <template>
   <main class="dndflow h-screen w-screen pt-[68px] -mt-[68px]" @drop="onDrop">
     <!-- @vue-expect-error -->
-    <VueFlow fit-view-on-init :auto-connect="true" :default-zoom="1.5" :min-zoom="0.2" :max-zoom="4" @dragover="onDragOver">
+    <VueFlow fit-view-on-init :auto-connect="true" :default-zoom="0.25" :min-zoom="0.2" :max-zoom="4" @dragover="onDragOver">
       <template #node-note="noteNodeProps">
         <NoteCardNode v-bind="noteNodeProps" />
       </template>
@@ -97,7 +97,11 @@ const onDrop = async (event: DragEvent) => {
       </template>
       <Background pattern-color="#aaa" :gap="8" />
       <Controls />
-      <button class="btn btn-primary absolute top-0 right-0 m-[15px] z-50">Save</button>
+      <div class="flex flex-col items-end m-[15px] top-0 right-0 z-50 pr-4 absolute">
+        <button class="btn btn-primary mb-2">Save</button>
+        <button class="btn btn-primary mb-2">Load</button>
+        <button class="btn btn-primary">Suggest</button>
+      </div>
       <FloatingCardList />
     </VueFlow>
   </main>
@@ -107,6 +111,7 @@ const onDrop = async (event: DragEvent) => {
 @import "@vue-flow/core/dist/style.css";
 @import "@vue-flow/core/dist/theme-default.css";
 @import "@vue-flow/controls/dist/style.css";
+
 .vue-flow__panel {
   top: 0px;
   bottom: unset !important;
