@@ -13,7 +13,7 @@ import { connectDb } from "../server/db";
 import router from "../server/routes";
 
 export const app = express();
-const PORT = process.env.PORT || 3333; // Jin: 3000 not working on my machine, so I changed it to 3333
+const PORT = process.env.PORT || 3000; // Jin: 3000 not working on my machine, so I changed it to 3333
 app.use(logger("dev"));
 
 app.use(cors()); // https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
