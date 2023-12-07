@@ -28,15 +28,19 @@ export default class MindMapConcept {
     return mindMap;
   }
 
-  // Get Mindmap by User (TO ASK)
+  // Get Mindmap by User
   async getMapByUser(user: ObjectId) {
-    return await this.mindMap.readMany(
-      { contributors: { $in: [user] } },
-      {
+    const maps = await this.mindMap.readMany({ contributors: { $exists: true } }, {
         sort: { dateUpdated: -1 },
-      },
-    );
-    // return this.mindMap.readMany({ contributors: { $in: [user] } });
+      },);
+    const usermaps: MindMapDoc[] = [];
+    for (const map of maps) {
+      const contributors = map.contributors.map((contributor) => contributor.toString());
+      if (contributors.includes(user.toString())) {
+        usermaps.push(map);
+      }
+    }
+    return usermaps;
   }
 
   async getIdeaBlocks(_id: ObjectId) {

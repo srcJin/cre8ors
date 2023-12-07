@@ -80,6 +80,13 @@ class Routes {
     return await Card.getCards({ _id: { $in: cardIds.map((id) => new ObjectId(id)) } });
   }
 
+  //Share Map
+  @Router.patch("/mindmaps/:mapId/share/:user")
+  async shareMap(mapId: ObjectId, user: string) {
+    const userId = (await User.getUserByUsername(user))._id;
+    return Mindmap.shareMap(mapId, userId);
+  }
+
   //Get Map By id
   @Router.get("/mindmaps/:_id")
   async getMap(_id: ObjectId) {
