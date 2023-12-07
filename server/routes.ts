@@ -151,7 +151,7 @@ class Routes {
     const cardDocs = await Promise.all(cards.map(async (card) => (await Card.getCards(card))[0]));
     const cardContents = cardDocs.map((card) => card.content);
     const suggestions = await Autosuggestion.suggest(cardContents);
-    const cardIds = await Promise.all(suggestions.map(async (suggestion) => (await Card.getByContent(suggestion))[0]));
+    const cardIds = await Promise.all(suggestions.map(async (suggestion) => (await Card.getByContent(suggestion))[0]._id));
 
     return cardIds;
   }
