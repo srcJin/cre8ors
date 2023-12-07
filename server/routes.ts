@@ -145,15 +145,23 @@ class Routes {
     await Card.isAuthor(user, _id);
     return Card.delete(_id);
   }
+
   @Router.post("/autosuggestion/suggest")
   async suggest(mapId: ObjectId) {
-    const cards = await Mindmap.getIdeaBlocks(mapId);
-    const cardDocs = await Promise.all(cards.map(async (card) => (await Card.getCards(card))[0]));
-    const cardContents = cardDocs.map((card) => card.content);
-    const suggestions = await Autosuggestion.suggest(cardContents);
-    const cardIds = await Promise.all(suggestions.map(async (suggestion) => (await Card.getByContent(suggestion))[0]._id));
-
-    return cardIds;
+    try {
+      const cards = await Mindmap.getIdeaBlocks(mapId);
+      const onlyId = cards.map((card) => card.id);
+      const cardDocs = await Card.getCards({ _id: { $in: onlyId.map((id) => new ObjectId(id)) } });
+      const cardContents = cardDocs.map((card) => card.content);
+      const suggestions = await Autosuggestion.suggest(cardContents);
+      console.log("we can gpt");
+      const cardIds = await Promise.all(suggestions.map(async (suggestion) => (await Card.getByContent(suggestion))[0]._id));
+      return cardIds;
+    } catch (error) {
+      // Handle errors
+      console.error("Error:", error);
+      throw new Error("Internal Server Error");
+    }
   }
 
   // TODO: Fix Mindmap doesn't have Mindmap.addideaBlock

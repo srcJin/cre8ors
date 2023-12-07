@@ -27,7 +27,7 @@ export default class AutosuggestionConcept {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: "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",
+            Authorization: process.env.GPT_API,
           },
         },
       );
