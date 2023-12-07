@@ -35,6 +35,24 @@ const operations: operation[] = [
     method: "DELETE",
     fields: { id: "input" },
   },
+  {
+    name: "Suggest",
+    endpoint: "/api/autosuggestion/suggest",
+    method: "POST",
+    fields: { mapId: "input" },
+  },
+  {
+    name: "Accept suggestion",
+    endpoint: "/api/autosuggestion/accept",
+    method: "POST",
+    fields: { mapId: "input", cardId: "input" },
+  },
+  {
+    name: "Reject suggestion",
+    endpoint: "/api/autosuggestion/reject",
+    method: "POST",
+    fields: {},
+  },
 ];
 
 // Do not edit below here.
