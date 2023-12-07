@@ -37,7 +37,7 @@ export default class AutosuggestionConcept {
       const generatedOrder = generatedOrderText.split(",").map((num: string) => parseInt(num.trim()));
 
       // Reorder the suggestions based on the specified order
-      const orderedSuggestions = generatedOrder.map((index: string | number) => suggestions[index]);
+      const orderedSuggestions: string[] = generatedOrder.map((index: string | number) => suggestions[index]);
       return orderedSuggestions;
     } catch (error) {
       console.error("Error making GPT-3 API call:", error);
@@ -46,10 +46,7 @@ export default class AutosuggestionConcept {
   }
 
   async accept() {
-    // project: ObjectId, card: ObjectId, options?: AutosuggestionOptions
-    // find autosuggestion with given card in autosuggestion collection above
-    // add autosuggestion to proj
-    return { msg: "Suggestion added to mindmap successfully!" }; // this method is currently not used
+    return { msg: "Suggestion added to mindmap successfully!" };
   }
 
   async reject() {
