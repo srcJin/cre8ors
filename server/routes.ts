@@ -155,9 +155,16 @@ class Routes {
   }
 
   @Router.get("/mindmaps/:mapId/ideablocks")
-  async getCards(mapId: ObjectId) {
+  async getMindMapCards(mapId: ObjectId) {
     const cards = await Mindmap.getIdeaBlocks(mapId);
     return { msg: `IdeaBlocks in Mindmap ${mapId}`, cards: cards };
+  }
+
+  //Share Map
+  @Router.patch("/mindmaps/:mapId/share/:user")
+  async shareMap(mapId: ObjectId, user: string) {
+    const userId = (await User.getUserByUsername(user))._id;
+    return Mindmap.shareMap(mapId, userId);
   }
 
   //Get Map By id
@@ -169,8 +176,9 @@ class Routes {
 
   //Get Maps By user
   @Router.get("/mindmaps/user/:user")
-  async getMapByUser(user: ObjectId) {
-    const maps = await Mindmap.getMapByUser(user);
+  async getMapByUser(user: string) {
+    const userId = (await User.getUserByUsername(user))._id;
+    const maps = await Mindmap.getMapByUser(userId);
     return maps;
   }
 

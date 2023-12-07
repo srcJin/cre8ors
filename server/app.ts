@@ -1,3 +1,4 @@
+import CardConcept from "./concepts/card";
 import FriendConcept from "./concepts/friend";
 import MindMapConcept from "./concepts/mindmap";
 import PostConcept from "./concepts/post";
