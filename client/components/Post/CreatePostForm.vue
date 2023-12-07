@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { fetchy } from "@/utils/fetchy";
 import { ref } from "vue";
-import { fetchy } from "../../utils/fetchy";
 
 const content = ref("");
 const emit = defineEmits(["refreshPosts"]);

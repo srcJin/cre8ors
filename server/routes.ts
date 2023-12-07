@@ -1,12 +1,10 @@
 import { ObjectId } from "mongodb";
 
-import { Router, getExpressRouter } from "./framework/router";
-
-import { Autosuggestion, Card, Mindmap, Post, User, WebSession } from "./app";
-import { CardDoc, CardOptions } from "./concepts/card";
-import { PostDoc, PostOptions } from "./concepts/post";
+import { Autosuggestion, Card, Mindmap, User, WebSession } from "./app";
+import { CardDoc, CardType } from "./concepts/card";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
+import { Router, getExpressRouter } from "./framework/router";
 import Responses from "./responses";
 
 class Routes {
@@ -58,37 +56,61 @@ class Routes {
     return { msg: "Logged out!" };
   }
 
-  @Router.get("/posts")
-  async getPosts(author?: string) {
-    let posts;
-    if (author) {
-      const id = (await User.getUserByUsername(author))._id;
-      posts = await Post.getByAuthor(id);
-    } else {
-      posts = await Post.getPosts({});
-    }
-    return Responses.posts(posts);
+  @Router.post("/mindmaps")
+  async startProject(session: WebSessionDoc, title: string, description: string) {
+    const user = WebSession.getUser(session);
+    const mindMap = (await Mindmap.create(title, description, "", [user], [])).mindMap;
+    return Responses.mindMap(mindMap);
   }
 
-  @Router.post("/posts")
-  async createPost(session: WebSessionDoc, content: string, options?: PostOptions) {
-    const user = WebSession.getUser(session);
-    const created = await Post.create(user, content, options);
-    return { msg: created.msg, post: await Responses.post(created.post) };
+  @Router.post("/mindmaps/:mapId/ideablocks")
+  async updateIdeaBlocks(mapId: ObjectId, ideaBlocks: ObjectId[]) {
+    return Mindmap.updateIdeaBlocks(mapId, ideaBlocks);
   }
 
-  @Router.patch("/posts/:_id")
-  async updatePost(session: WebSessionDoc, _id: ObjectId, update: Partial<PostDoc>) {
-    const user = WebSession.getUser(session);
-    await Post.isAuthor(user, _id);
-    return await Post.update(_id, update);
+  @Router.delete("/mindmaps/:mapId/ideablocks/:ideablock")
+  async removeIdeaBlock(mapId: ObjectId, ideablock: ObjectId) {
+    return Mindmap.removeideaBlock(mapId, ideablock);
   }
 
-  @Router.delete("/posts/:_id")
-  async deletePost(session: WebSessionDoc, _id: ObjectId) {
-    const user = WebSession.getUser(session);
-    await Post.isAuthor(user, _id);
-    return Post.delete(_id);
+  @Router.get("/mindmaps/:mapId/ideablocks")
+  async getIdeaBlocks(mapId: ObjectId) {
+    const cardIds = await Mindmap.getIdeaBlocks(mapId);
+    console.log(cardIds);
+    return await Card.getCards({ _id: { $in: cardIds.map((id) => new ObjectId(id)) } });
+  }
+
+  //Get Map By id
+  @Router.get("/mindmaps/:_id")
+  async getMap(_id: ObjectId) {
+    const map = await Mindmap.getMap(_id);
+    return Responses.mindMap(map);
+  }
+
+  //Get Maps By user
+  @Router.get("/mindmaps/user/:username")
+  async getMapByUser(username: string) {
+    const id = (await User.getUserByUsername(username))._id;
+    const maps = await Mindmap.getMapByUser(id);
+    return maps;
+  }
+
+  //Delete Map
+  @Router.delete("/mindmaps/:mapId")
+  async deleteMap(mapId: ObjectId) {
+    return Mindmap.deleteMap(mapId);
+  }
+
+  //Save Map
+  @Router.patch("/mindmaps/:mapId")
+  async save(mapId: ObjectId, content: string) {
+    return Mindmap.saveMap(mapId, content);
+  }
+
+  //Clear Map
+  @Router.patch("/mindmaps/:mapId/clear")
+  async clearMap(mapId: ObjectId) {
+    return Mindmap.clearMap(mapId);
   }
 
   @Router.get("/cards")
@@ -104,9 +126,9 @@ class Routes {
   }
 
   @Router.post("/cards")
-  async createCard(session: WebSessionDoc, content: string, options?: CardOptions) {
+  async createCard(session: WebSessionDoc, title: string, type: CardType, content: string) {
     const user = WebSession.getUser(session);
-    const created = await Card.create(user, content, options);
+    const created = await Card.create(user, type, title, content);
     return { msg: created.msg, card: await Responses.card(created.card) };
   }
 
@@ -123,65 +145,6 @@ class Routes {
     await Card.isAuthor(user, _id);
     return Card.delete(_id);
   }
-
-  @Router.post("/mindmap")
-  async startProject(session: WebSessionDoc, title: string, description: string) {
-    const user = WebSession.getUser(session);
-    const mindMap = (await Mindmap.create(title, description, user, [], [])).mindMap;
-    return Responses.mindMap(mindMap);
-  }
-
-  @Router.post("/mindmap/:mapId/ideablocks/:ideaBlock")
-  async addIdeaBlock(mapId: ObjectId, ideaBlock: ObjectId) {
-    return Mindmap.addideaBlock(mapId, ideaBlock);
-  }
-
-  @Router.delete("/mindmap/:mapId/ideablocks/:ideablock")
-  async removeIdeaBlock(mapId: ObjectId, ideablock: ObjectId) {
-    return Mindmap.removeideaBlock(mapId, ideablock);
-  }
-
-  @Router.post("/mindmap/:mapId/connect/:_id1/:_id2")
-  async connectIdeaBlock(mapId: ObjectId, _id1: ObjectId, _id2: ObjectId) {
-    return Mindmap.connect(mapId, _id1, _id2);
-  }
-
-  @Router.delete("/mindmap/:mapId/disconnect/:_id1/:_id2")
-  async disconnectIdeaBlocks(mapId: ObjectId, _id1: ObjectId, _id2: ObjectId) {
-    return Mindmap.disconnect(mapId, _id1, _id2);
-  }
-
-  @Router.get("/mindmap/:mapId")
-  async getConnections(mapId: ObjectId) {
-    const connections = await Mindmap.getConnections(mapId);
-    return { msg: `Connections in Mindmap ${mapId}`, connections: await Responses.mindMapConnections(connections) };
-  }
-
-  @Router.get("/mindmap/:mapId/ideablocks")
-  async getMindmapCards(mapId: ObjectId) {
-    const cards = await Mindmap.getIdeaBlocks(mapId);
-    return { msg: `IdeaBlocks in Mindmap ${mapId}`, cards: cards };
-  }
-
-  @Router.patch("/mindmap/:mapId/:newMap")
-  async updateTo(mapId: ObjectId, newMap: ObjectId) {
-    await Mindmap.updateTo(mapId, newMap);
-    const connections = await Mindmap.getConnections(mapId);
-    return { msg: `Connections in Mindmap ${mapId}`, connections: await Responses.mindMapConnections(connections) };
-  }
-
-  @Router.get("/mindmap/:mapId/connectionsFrom/:ideablock")
-  async getConnectionsFromIdeaBlock(mapId: ObjectId, ideablock: ObjectId) {
-    const connections = await Mindmap.getConnectionsFrom(mapId, ideablock);
-    return { msg: `Connections in Mindmap ${mapId} From ${ideablock}`, connections: await Responses.mindMapConnections(connections) };
-  }
-
-  @Router.get("/mindmap/:mapId/connectionsTo/:ideablock")
-  async getConnectionsToIdeaBlock(mapId: ObjectId, ideablock: ObjectId) {
-    const connections = await Mindmap.getConnectionsTo(mapId, ideablock);
-    return { msg: `Connections in Mindmap ${mapId} To ${ideablock}`, connections: await Responses.mindMapConnections(connections) };
-  }
-
   @Router.post("/autosuggestion/suggest")
   async suggest(mapId: ObjectId) {
     const cards = await Mindmap.getIdeaBlocks(mapId);
@@ -191,9 +154,15 @@ class Routes {
     return suggestion.autosuggestion;
   }
 
+  // TODO: Fix Mindmap doesn't have Mindmap.addideaBlock
+  // @Router.post("/autosuggestion/accept")
+  // async accept(mapId: ObjectId, cardId: ObjectId) {
+  //   return Mindmap.addideaBlock(mapId, cardId);
+  // }
+
   @Router.post("/autosuggestion/accept")
   async accept(mapId: ObjectId, cardId: ObjectId) {
-    return Mindmap.addideaBlock(mapId, cardId);
+    return console.log("autosuggestion accept, mapId, cardId", mapId, cardId);
   }
 
   @Router.post("/autosuggestion/reject")

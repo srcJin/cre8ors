@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { CustomData } from "./types";
-const { title, text } = defineProps<CustomData>();
+import type { CustomData } from "./types";
+const { card } = defineProps<CustomData>();
 const openURL = () => {
-  window.open(text, "_blank");
+  window.open(card.content, "_blank");
 };
 </script>
 
 <template>
   <div className="card w-96 bg-warning text-warning-content h-full flex-shrink-0">
     <div className="card-body">
-      <h2 className="card-title">{{ title }}</h2>
-      <p>{{ text }}</p>
+      <h2 className="card-title">{{ card.title }}</h2>
+      <p>{{ card.content }}</p>
       <div className="card-actions justify-end">
         <button className="btn" @click="openURL">Open</button>
       </div>
