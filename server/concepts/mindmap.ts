@@ -30,9 +30,12 @@ export default class MindMapConcept {
 
   // Get Mindmap by User
   async getMapByUser(user: ObjectId) {
-    const maps = await this.mindMap.readMany({ contributors: { $exists: true } }, {
+    const maps = await this.mindMap.readMany(
+      { contributors: { $exists: true } },
+      {
         sort: { dateUpdated: -1 },
-      },);
+      },
+    );
     const usermaps: MindMapDoc[] = [];
     for (const map of maps) {
       const contributors = map.contributors.map((contributor) => contributor.toString());
