@@ -112,8 +112,9 @@ export default class MindMapConcept {
       throw new NotFoundError(`Mindmap ${_id} does not exist`);
     }
     const contributors = mindMap.contributors;
-    if (contributors.includes(user)) {
-      throw new AlreadyAddedError(user);
+    const contributors_string = mindMap.contributors.map((contributor) => contributor.toString());
+    if (contributors_string.includes(user.toString())) {
+      throw new UserAlreadyAdded();
     }
 
     contributors.push(user);
@@ -130,5 +131,11 @@ export default class MindMapConcept {
 export class AlreadyAddedError extends NotAllowedError {
   constructor(public readonly ideaBlock: ObjectId) {
     super("The ideaBlock/user {0} was already added!", ideaBlock);
+  }
+}
+
+export class UserAlreadyAdded extends NotAllowedError {
+  constructor() {
+    super("User was already added!");
   }
 }
