@@ -8,9 +8,13 @@ import { MindMap } from "../types/mindmap";
 const mindmaps = ref<MindMap[]>([]);
 const title = ref("");
 const description = ref("");
+const collaborator: { [key: string]: string } = {};
 const { currentUsername } = storeToRefs(useUserStore());
 const getMindMaps = async () => {
   mindmaps.value = await fetchy(`/api/mindmaps/user/${currentUsername.value}`, "GET");
+  for (const map of mindmaps.value) {
+    collaborator[map._id] = "";
+  }
 };
 const addMindMap = async () => {
   await fetchy(`/api/mindmaps`, "POST", {
@@ -27,6 +31,11 @@ const addMindMap = async () => {
 const deleteMindMap = async (id: string) => {
   await fetchy(`/api/mindmaps/${id}`, "DELETE");
   await getMindMaps();
+};
+
+const shareMindmap = async (id: string) => {
+  await fetchy(`/api/mindmaps/${id}/share/${collaborator[id]}`, "PATCH");
+  collaborator[id] = "";
 };
 
 onBeforeMount(async () => {
@@ -56,6 +65,10 @@ onBeforeMount(async () => {
             <button class="btn btn-neutral btn-sm w-full">Open</button>
           </RouterLink>
         </div>
+      </div>
+      <div className="flex flex-row gap-4 pl-4 pb-5 ">
+        <input type="text" placeholder="add collaborator's username" class="input input-bordered input-sm w-full max-w-xs" v-model="collaborator[mindmap._id]" />
+        <button class="btn btn-primary btn-sm" @click="shareMindmap(mindmap._id)">Share</button>
       </div>
     </div>
   </main>

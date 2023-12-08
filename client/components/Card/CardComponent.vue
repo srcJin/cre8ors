@@ -13,7 +13,8 @@ const { card, editable = true } = defineProps<{
 const editing = ref(false);
 const editingContent = ref(card.content);
 const openURL = () => {
-  window.open(card.content, "_blank");
+  const url = card.content.startsWith("http") ? card.content : `//${card.content}`;
+  window.open(url, "_blank");
 };
 
 const { currentUsername } = storeToRefs(useUserStore());

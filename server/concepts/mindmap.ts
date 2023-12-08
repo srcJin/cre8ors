@@ -28,15 +28,22 @@ export default class MindMapConcept {
     return mindMap;
   }
 
-  // Get Mindmap by User (TO ASK)
+  // Get Mindmap by User
   async getMapByUser(user: ObjectId) {
-    return await this.mindMap.readMany(
-      { contributors: { $in: [user] } },
+    const maps = await this.mindMap.readMany(
+      { contributors: { $exists: true } },
       {
         sort: { dateUpdated: -1 },
       },
     );
-    // return this.mindMap.readMany({ contributors: { $in: [user] } });
+    const usermaps: MindMapDoc[] = [];
+    for (const map of maps) {
+      const contributors = map.contributors.map((contributor) => contributor.toString());
+      if (contributors.includes(user.toString())) {
+        usermaps.push(map);
+      }
+    }
+    return usermaps;
   }
 
   async getIdeaBlocks(_id: ObjectId) {
@@ -105,8 +112,9 @@ export default class MindMapConcept {
       throw new NotFoundError(`Mindmap ${_id} does not exist`);
     }
     const contributors = mindMap.contributors;
-    if (contributors.includes(user)) {
-      throw new AlreadyAddedError(user);
+    const contributors_string = mindMap.contributors.map((contributor) => contributor.toString());
+    if (contributors_string.includes(user.toString())) {
+      throw new UserAlreadyAdded();
     }
 
     contributors.push(user);
@@ -123,5 +131,11 @@ export default class MindMapConcept {
 export class AlreadyAddedError extends NotAllowedError {
   constructor(public readonly ideaBlock: ObjectId) {
     super("The ideaBlock/user {0} was already added!", ideaBlock);
+  }
+}
+
+export class UserAlreadyAdded extends NotAllowedError {
+  constructor() {
+    super("User was already added!");
   }
 }

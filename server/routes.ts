@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 
-import { Card, Mindmap, User, WebSession } from "./app";
+import { Autosuggestion, Card, Mindmap, User, WebSession } from "./app";
 import { CardDoc, CardType } from "./concepts/card";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
@@ -80,6 +80,13 @@ class Routes {
     return await Card.getCards({ _id: { $in: cardIds.map((id) => new ObjectId(id)) } });
   }
 
+  //Share Map
+  @Router.patch("/mindmaps/:mapId/share/:user")
+  async shareMap(mapId: ObjectId, user: string) {
+    const userId = (await User.getUserByUsername(user))._id;
+    return Mindmap.shareMap(mapId, userId);
+  }
+
   //Get Map By id
   @Router.get("/mindmaps/:_id")
   async getMap(_id: ObjectId) {
@@ -144,6 +151,32 @@ class Routes {
     const user = WebSession.getUser(session);
     await Card.isAuthor(user, _id);
     return Card.delete(_id);
+  }
+  @Router.post("/autosuggestion/suggest")
+  async suggest(mapId: ObjectId) {
+    const cards = await Mindmap.getIdeaBlocks(mapId);
+    const cardDocs = await Promise.all(cards.map(async (card) => (await Card.getCards(card))[0]));
+    const cardContents = cardDocs.map((card) => card.content);
+    const suggestions = await Autosuggestion.suggest(cardContents);
+    const cardIds = await Promise.all(suggestions.map(async (suggestion) => (await Card.getByContent(suggestion))[0]._id));
+
+    return cardIds;
+  }
+
+  // TODO: Fix Mindmap doesn't have Mindmap.addideaBlock
+  // @Router.post("/autosuggestion/accept")
+  // async accept(mapId: ObjectId, cardId: ObjectId) {
+  //   return Mindmap.addideaBlock(mapId, cardId);
+  // }
+
+  @Router.post("/autosuggestion/accept")
+  async accept() {
+    return await Autosuggestion.accept();
+  }
+
+  @Router.post("/autosuggestion/reject")
+  async reject() {
+    return await Autosuggestion.reject();
   }
 }
 

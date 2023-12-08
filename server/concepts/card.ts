@@ -30,6 +30,10 @@ export default class CardConcept {
     return await this.getCards({ author });
   }
 
+  async getByContent(content: string) {
+    return await this.getCards({ content: content });
+  }
+
   async update(_id: ObjectId, update: Partial<CardDoc>) {
     this.sanitizeUpdate(update);
     await this.card.updateOne({ _id }, update);
