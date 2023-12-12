@@ -159,9 +159,6 @@ const suggestGPTConnection = async () => {
     console.log("JSON.stringify(testRequestBody)", JSON.stringify(testRequestBody));
     const response = await fetchy(`/api/autosuggestion/suggest`, "POST", {
       body: testRequestBody,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
 
     console.log("response.data=", response.data);
