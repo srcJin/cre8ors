@@ -77,25 +77,33 @@ const onDragStart = (event: DragEvent, card: Card) => {
           {{ isCollapsed ? "Expand" : "Collapse" }}
         </button>
         <button class="btn btn-accent btn-md ml-20" @click="resetIsChecked" onclick="import_card_modal.showModal()">Import cards</button>
+        <!-- here is the list of cards in import cards panel -->
+        <!-- adding a container for search bar and import button -->
         <dialog id="import_card_modal" class="modal">
           <div class="modal-box">
-            <form method="dialog">
-              <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-            </form>
-            <div className="flex flex-col">
-              <div className="flex flex-row items-center gap-4 w-full" v-for="card in cards" :key="card._id">
-                <CardComponent :card="card" />
-                <input type="checkbox" v-model="isChecked[card._id]" class="checkbox" />
-              </div>
-            </div>
-            <div class="modal-action">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-4 border-b border-gray-200">
+              <input type="text" placeholder="Search..." class="input input-bordered w-full max-w-xs" v-model="searchText" />
+
+              <button class="btn btn-accent" @click="importCards">Update</button>
+
               <form method="dialog">
-                <button class="btn btn-accent mr-4" @click="importCards">Update</button>
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
               </form>
+            </div>
+
+            <div class="modal-content">
+              <div className="flex flex-col">
+                <div className="flex flex-row items-center gap-4 w-full" v-for="block in filteredIdeablocks" :key="block._id">
+                  <CardComponent :card="block" />
+                  <input type="checkbox" v-model="isChecked[block._id]" class="checkbox" />
+                </div>
+              </div>
             </div>
           </div>
         </dialog>
       </div>
+
       <div v-if="!isCollapsed" class="nodes">
         <div class="nodes">
           <div class="overflow-x-auto">
