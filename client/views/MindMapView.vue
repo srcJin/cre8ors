@@ -5,6 +5,7 @@ import { Controls } from "@vue-flow/controls";
 import { VueFlow, useVueFlow } from "@vue-flow/core";
 import { nextTick, onBeforeMount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import CreateCardModal from "../components/Card/CreateCardModal.vue";
 import CustomCardNode from "../components/MindMap/CustomCardNode.vue";
 import FloatingCardList from "../components/MindMap/FloatingCardList.vue";
 
@@ -28,7 +29,13 @@ const saveMindmap = async () => {
   });
 };
 
-// Mindmap for testing
+const showOther = ref(false);
+
+const toggleOther = () => {
+  showOther.value = !showOther.value;
+};
+
+//Mindmap for testing
 // let elements = ref<Elements>([
 //   // nodes
 //   // an input node, specified by using `type: 'input'`
@@ -138,6 +145,31 @@ const suggestRandomConnection = () => {
   elements.value = [...elements.value, newEdge];
 };
 
+const suggestGPTConnection = async () => {
+  try {
+    const requestBody = {
+      mapId: mindmapId, // Use .value for reactive refs
+    };
+
+    console.log("JSON.stringify(requestBody)", JSON.stringify(requestBody));
+
+    const testRequestBody = {
+      mapId: "657059f265d5150cec9e0856", // Replace with a hard-coded valid ID for testing
+    };
+    console.log("JSON.stringify(testRequestBody)", JSON.stringify(testRequestBody));
+    const response = await fetchy(`/api/autosuggestion/suggest`, "POST", {
+      body: testRequestBody,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("response.data=", response.data);
+  } catch (error) {
+    console.error("Error fetching suggestions:", error);
+  }
+};
+
 const suggestConnection = async () => {
   // Filter out elements that have a 'position' property, assuming these are nodes
   const nodes = elements.value.filter((el: any) => el.position);
@@ -148,8 +180,7 @@ const suggestConnection = async () => {
   }
 
   // Define a threshold for forming a connection
-  const threshold = 0.9; // Example threshold, can be adjusted
-
+  const threshold = 0.9; // can be adjusted
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
       const node1 = nodes[i];
@@ -166,9 +197,6 @@ const suggestConnection = async () => {
             target: node2.id,
             type: "special", // Set the type to 'special'
             animated: true,
-            data: {
-              customProperty: "suggested", // Example custom property
-            },
           };
 
           elements.value = [...elements.value, newEdge];
@@ -281,16 +309,37 @@ const onDrop = async (event: DragEvent) => {
       </template>
       <Background pattern-color="#aaa" :gap="8" />
       <Controls />
+
       <div class="flex flex-col items-end m-[15px] top-0 right-0 z-50 pr-4 absolute">
-        <button class="btn btn-primary mb-2" @click="saveMindmap">Save</button>
-        <!-- @TODO - Load button -->
-        <button class="btn btn-primary mb-2" @click="loadMindmap">Revert</button>
-        <!-- @ TODO - Suggest button -->
-        <button class="btn btn-primary mb-2" @click="suggestConnection">Suggest</button>
-        <button class="btn btn-primary mb-2" @click="updateMindmap">Accept</button>
-        <button class="btn btn-warning mb-2" @click="removeAllNodes">Remove All Nodes</button>
-        <button class="btn btn-warning mb-2" @click="removeAllEdges">Remove All Edges</button>
+        <!-- Single Button Line -->
+        <div class="flex mb-2">
+          <button class="btn btn-primary" onclick="card_modal.showModal()">Add Card</button>
+          <CreateCardModal />
+        </div>
+
+        <!-- Save and Update Buttons Line -->
+        <div class="flex mb-2">
+          <button class="btn btn-primary mr-2" @click="saveMindmap">Save</button>
+          <button class="btn btn-primary" @click="loadMindmap">Update</button>
+        </div>
+
+        <!-- Suggest and Accept Buttons Line -->
+        <div class="flex mb-2">
+          <button class="btn btn-primary mr-2" @click="suggestGPTConnection">Suggest</button>
+          <button class="btn btn-primary" @click="updateMindmap">Accept</button>
+        </div>
+
+        <!-- Collapsible Group for Removal Buttons -->
+        <button @click="toggleOther" class="btn mb-2">Other</button>
+
+        <div>
+          <div v-if="showOther" class="flex">
+            <button class="btn btn-warning mr-2" @click="removeAllNodes">Remove All Nodes</button>
+            <button class="btn btn-warning" @click="removeAllEdges">Remove All Edges</button>
+          </div>
+        </div>
       </div>
+
       <FloatingCardList :id="mindmapId as string" />
     </VueFlow>
   </main>

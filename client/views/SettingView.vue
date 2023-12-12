@@ -7,22 +7,41 @@ import UpdateUserForm from "../components/Setting/UpdateUserForm.vue";
 const { currentUsername } = storeToRefs(useUserStore());
 const { logoutUser, deleteUser } = useUserStore();
 
-async function logout() {
+async function handleLogout() {
   await logoutUser();
-  void router.push({ name: "Home" });
+  router.push({ name: "Home" });
 }
 
-async function delete_() {
+async function handleDeleteUser() {
   await deleteUser();
-  void router.push({ name: "Home" });
+  router.push({ name: "Home" });
 }
 </script>
 
 <template>
-  <main class="column">
+  <main class="settings-page">
     <h1>Settings for {{ currentUsername }}</h1>
-    <button class="pure-button pure-button-primary" @click="logout">Logout</button>
-    <button class="button-error pure-button" @click="delete_">Delete User</button>
+    <div class="button-group">
+      <button class="btn btn-primary" @click="handleLogout">Logout</button>
+      <button class="btn btn-error" @click="handleDeleteUser">Delete User</button>
+    </div>
     <UpdateUserForm />
   </main>
 </template>
+
+<style scoped>
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+h1 {
+  margin-bottom: 20px;
+}
+
+.button-group {
+  margin-bottom: 20px;
+}
+</style>

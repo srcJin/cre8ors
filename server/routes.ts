@@ -154,6 +154,7 @@ class Routes {
   }
   @Router.post("/autosuggestion/suggest")
   async suggest(mapId: ObjectId) {
+    console.log("suggesting mapId", mapId);
     const cards = await Mindmap.getIdeaBlocks(mapId);
     const cardDocs = await Promise.all(cards.map(async (card) => (await Card.getCards(card))[0]));
     const cardContents = cardDocs.map((card) => card.content);
@@ -163,6 +164,18 @@ class Routes {
     return cardIds;
   }
 
+  @Router.get("/autosuggestion/suggest/:_mapId")
+  async suggestGPT(_mapId: ObjectId) {
+    console.log("suggesting mapId", _mapId);
+    const cards = await Mindmap.getIdeaBlocks(_mapId);
+    console.log("cards", cards);
+    const cardDocs = await Promise.all(cards.map(async (card) => (await Card.getCards(card))[0]));
+    const cardContents = cardDocs.map((card) => card.content);
+    const suggestions = await Autosuggestion.suggest(cardContents);
+    const cardIds = await Promise.all(suggestions.map(async (suggestion) => (await Card.getByContent(suggestion))[0]._id));
+
+    return cardIds;
+  }
   // TODO: Fix Mindmap doesn't have Mindmap.addideaBlock
   // @Router.post("/autosuggestion/accept")
   // async accept(mapId: ObjectId, cardId: ObjectId) {
