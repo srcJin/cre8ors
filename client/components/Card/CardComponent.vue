@@ -49,3 +49,10 @@ const onSubmit = async () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.card-body {
+  max-height: 500px;
+  overflow-y: auto;
+}
+</style>
