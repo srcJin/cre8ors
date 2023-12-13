@@ -8,6 +8,10 @@ import { useRoute } from "vue-router";
 import CreateCardModal from "../components/Card/CreateCardModal.vue";
 import CustomCardNode from "../components/MindMap/CustomCardNode.vue";
 import FloatingCardList from "../components/MindMap/FloatingCardList.vue";
+import { Card } from "../types/card";
+
+const { id } = defineProps<{ id: string }>();
+const ideablocks = ref<Card[]>([]);
 
 const {
   params: { id: mindmapId },
@@ -27,6 +31,39 @@ const saveMindmap = async () => {
       content: JSON.stringify(elements.value),
     },
   });
+};
+
+// duplicated floatingcardlist, can be merged
+const loadIdeaBlocks = async () => {
+  ideablocks.value = await fetchy(`/api/mindmaps/${id}/ideablocks`, "GET");
+};
+
+const addNewCard = async (newCard: any) => {
+  // Load the existing idea blocks
+  const existingIdeablocks = await fetchy(`/api/mindmaps/${id}/ideablocks`, "GET");
+
+  // Add the new card to the existing idea blocks
+  const updatedIdeablocks = [...existingIdeablocks, newCard];
+
+  await fetchy(`/api/mindmaps/${id}/ideablocks`, "POST", {
+    body: {
+      ideaBlocks: updatedIdeablocks,
+    },
+  });
+
+  // Reload the idea blocks
+  await loadIdeaBlocks();
+};
+
+const handleNewCard = (cardDetails: any) => {
+  addNewCard(cardDetails)
+    .then(() => {
+      // Handle successful addition here
+    })
+    .catch((error) => {
+      console.error("Error adding new card:", error);
+      // Handle errors here
+    });
 };
 
 const showOther = ref(false);
@@ -358,7 +395,8 @@ const onDrop = async (event: DragEvent) => {
         <!-- Single Button Line -->
         <div class="flex mb-2">
           <button class="btn btn-primary" onclick="card_modal.showModal()">Add Card</button>
-          <CreateCardModal />
+          <!-- take the emit from child component(CreateCardModal.vue) -->
+          <CreateCardModal @newCardCreated="handleNewCard" />
         </div>
 
         <!-- Save and Update Buttons Line -->

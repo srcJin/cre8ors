@@ -20,8 +20,14 @@ const toggleCollapse = () => {
 
 const ideablocks = ref<Card[]>([]);
 const searchText = ref("");
+const importSearchText = ref("");
+
 const filteredIdeablocks = computed(() => {
   return ideablocks.value.filter((block) => block.title.toLowerCase().includes(searchText.value.toLowerCase()) || block.content.toLowerCase().includes(searchText.value.toLowerCase()));
+});
+
+const filteredCards = computed(() => {
+  return cards.value.filter((card) => card.title.toLowerCase().includes(importSearchText.value.toLowerCase()) || card.content.toLowerCase().includes(importSearchText.value.toLowerCase()));
 });
 
 const loadIdeaBlocks = async () => {
@@ -84,9 +90,9 @@ const onDragStart = (event: DragEvent, card: Card) => {
           <div class="modal-box">
             <!-- Modal Header -->
             <div class="flex justify-between items-center p-4 border-b border-gray-200">
-              <input type="text" placeholder="Search..." class="input input-bordered w-full max-w-xs" v-model="searchText" />
+              <input type="text" placeholder="Search..." class="input input-bordered w-full max-w-xs" v-model="importSearchText" />
 
-              <button class="btn btn-accent" @click="importCards">Update</button>
+              <button class="btn btn-accent" @click="importCards">Reload</button>
 
               <form method="dialog">
                 <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
@@ -95,9 +101,9 @@ const onDragStart = (event: DragEvent, card: Card) => {
 
             <div class="modal-content">
               <div className="flex flex-col">
-                <div className="flex flex-row items-center gap-4 w-full" v-for="block in filteredIdeablocks" :key="block._id">
-                  <CardComponent :card="block" />
-                  <input type="checkbox" v-model="isChecked[block._id]" class="checkbox" />
+                <div className="flex flex-row items-center gap-4 w-full" v-for="card in filteredCards" :key="card._id">
+                  <CardComponent :card="card" />
+                  <input type="checkbox" v-model="isChecked[card._id]" class="checkbox" />
                 </div>
               </div>
             </div>

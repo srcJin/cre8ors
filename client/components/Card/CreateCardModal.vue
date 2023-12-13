@@ -3,12 +3,19 @@ import { ref } from "vue";
 import { useCardStore } from "../../stores/card";
 import { CardType } from "../../types/card";
 
+// add emit to live update floating card list
+import { defineEmits } from "vue";
+const emit = defineEmits(["cardCreated"]);
+
 const title = ref("");
 const type = ref<CardType>(CardType.note);
 const content = ref("");
 const { createCard } = useCardStore();
 const onSubmit = async () => {
   await createCard(title.value, type.value, content.value);
+  // emit the created card to the parent component(FlotingCardList.vue)
+  emit("cardCreated", { title: title.value, type: type.value, content: content.value });
+
   title.value = "";
   type.value = CardType.note;
   content.value = "";
