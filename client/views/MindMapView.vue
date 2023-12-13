@@ -5,6 +5,7 @@ import { Controls } from "@vue-flow/controls";
 import { VueFlow, useVueFlow } from "@vue-flow/core";
 import { nextTick, onBeforeMount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import CreateCardModal from "../components/Card/CreateCardModal.vue";
 import CustomCardNode from "../components/MindMap/CustomCardNode.vue";
 import FloatingCardList from "../components/MindMap/FloatingCardList.vue";
 
@@ -28,7 +29,13 @@ const saveMindmap = async () => {
   });
 };
 
-// Mindmap for testing
+const showOther = ref(false);
+
+const toggleOther = () => {
+  showOther.value = !showOther.value;
+};
+
+//Mindmap for testing
 // let elements = ref<Elements>([
 //   // nodes
 //   // an input node, specified by using `type: 'input'`
@@ -138,7 +145,7 @@ const suggestRandomConnection = () => {
   elements.value = [...elements.value, newEdge];
 };
 
-const suggestConnection = async () => {
+const suggestScoredConnection = async () => {
   // Filter out elements that have a 'position' property, assuming these are nodes
   const nodes = elements.value.filter((el: any) => el.position);
 
@@ -148,8 +155,7 @@ const suggestConnection = async () => {
   }
 
   // Define a threshold for forming a connection
-  const threshold = 0.9; // Example threshold, can be adjusted
-
+  const threshold = 0.9; // can be adjusted
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
       const node1 = nodes[i];
@@ -166,9 +172,6 @@ const suggestConnection = async () => {
             target: node2.id,
             type: "special", // Set the type to 'special'
             animated: true,
-            data: {
-              customProperty: "suggested", // Example custom property
-            },
           };
 
           elements.value = [...elements.value, newEdge];
@@ -176,6 +179,98 @@ const suggestConnection = async () => {
       }
     }
   }
+};
+
+const suggestGPTConnectionBackend = async () => {
+  try {
+    const requestBody = {
+      mapId: mindmapId, // Use .value for reactive refs
+    };
+
+    console.log("JSON.stringify(requestBody)", JSON.stringify(requestBody));
+
+    const testRequestBody = {
+      mapId: mindmapId, // Replace with a hard-coded valid ID for testing
+    };
+    console.log("JSON.stringify(testRequestBody)", JSON.stringify(testRequestBody));
+
+    const response = await fetchy(`/api/autosuggestion/suggest`, "POST", {
+      body: testRequestBody,
+    });
+
+    // console.log("response=", JSON.parse(response));
+    return JSON.parse(response);
+  } catch (error) {
+    console.error("Error fetching suggestions:", error);
+  }
+};
+
+interface Connection {
+  source: string;
+  target: string;
+}
+
+interface Suggestions {
+  connections: Connection[];
+}
+
+const connectAccordingToSuggestions = (suggestions: Suggestions): void => {
+  console.log("connectAccordingToSuggestions");
+  const nodes = elements.value.filter((el: any) => "position" in el) as Node[];
+
+  if (nodes.length < 2) {
+    console.log("Not enough nodes to form a connection");
+    return;
+  }
+  // console.log("nodes[0]=", nodes[0]);
+
+  // console.log("nodes[0].id=", nodes[0].data.card._id);
+
+  suggestions.connections.forEach((connection) => {
+    const sourceNode: any = nodes.find((node) => {
+      // Cast node to 'any' to access 'data' and 'id' properties
+      const anyNode: any = node;
+      return anyNode.data.card._id === connection.source;
+    });
+
+    const targetNode: any = nodes.find((node) => {
+      // Cast node to 'any' to access 'data' and 'id' properties
+      const anyNode: any = node;
+      return anyNode.data.card._id === connection.target;
+    });
+
+    if (sourceNode && targetNode && !areNodesConnected(sourceNode, targetNode)) {
+      const newEdge = {
+        id: `e${sourceNode.id}-${targetNode.id}`,
+        source: sourceNode.id,
+        target: targetNode.id,
+        type: "special",
+        animated: true,
+        data: {
+          customProperty: "suggested",
+        },
+      };
+
+      elements.value = [...elements.value, newEdge];
+    }
+  });
+};
+
+const suggestionPipeline = async () => {
+  // For debugging, using sci-fi mindmap
+  //   const suggestions: Suggestions = {
+  //   connections: [
+  //     { source: "6576f69cc300c74934613ba4", target: "6576f675c300c74934613ba0" },
+  //     { source: "6576f69cc300c74934613ba4", target: "6576f657c300c74934613b9d" },
+  //     { source: "6576f692c300c74934613ba3", target: "6576f66dc300c74934613b9f" },
+  //     { source: "6576f692c300c74934613ba3", target: "6576f623c300c74934613b97" },
+  //     { source: "6576f688c300c74934613ba2", target: "6576f633c300c74934613b99" },
+  //   ],
+  // };
+  const suggestions = await suggestGPTConnectionBackend();
+
+  // console.log("suggestionPipeline suggestions=", suggestions);
+  connectAccordingToSuggestions(suggestions);
 };
 
 const areNodesConnected = (node1: any, node2: any) => {
@@ -194,29 +289,6 @@ const findConnectedNodes = async (string1: string, string2: string) => {
   const score = Math.random();
   console.log("findConnectedNodes Score:", score);
   return score;
-  // To be implemented in the backend
-  // try {
-  //   // Send the data to your backend NLP service
-  //   const response = await fetch("/api/suggest", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify(payload),
-  //   });
-
-  //   if (!response.ok) {
-  //     throw new Error(`HTTP error! status: ${response.status}`);
-  //   }
-
-  //   const { score } = await response.json();
-
-  //   // Return the relationship score from the backend
-  //   return score;
-  // } catch (error) {
-  //   console.error("Error during relationship scoring:", error);
-  //   return null; // or handle the error as needed
-  // }
 };
 
 onBeforeMount(async () => {
@@ -281,16 +353,37 @@ const onDrop = async (event: DragEvent) => {
       </template>
       <Background pattern-color="#aaa" :gap="8" />
       <Controls />
+
       <div class="flex flex-col items-end m-[15px] top-0 right-0 z-50 pr-4 absolute">
-        <button class="btn btn-primary mb-2" @click="saveMindmap">Save</button>
-        <!-- @TODO - Load button -->
-        <button class="btn btn-primary mb-2" @click="loadMindmap">Revert</button>
-        <!-- @ TODO - Suggest button -->
-        <button class="btn btn-primary mb-2" @click="suggestConnection">Suggest</button>
-        <button class="btn btn-primary mb-2" @click="updateMindmap">Accept</button>
-        <button class="btn btn-warning mb-2" @click="removeAllNodes">Remove All Nodes</button>
-        <button class="btn btn-warning mb-2" @click="removeAllEdges">Remove All Edges</button>
+        <!-- Single Button Line -->
+        <div class="flex mb-2">
+          <button class="btn btn-primary" onclick="card_modal.showModal()">Add Card</button>
+          <CreateCardModal />
+        </div>
+
+        <!-- Save and Update Buttons Line -->
+        <div class="flex mb-2">
+          <button class="btn btn-primary mr-2" @click="saveMindmap">Save</button>
+          <button class="btn btn-primary" @click="loadMindmap">Update</button>
+        </div>
+
+        <!-- Suggest and Accept Buttons Line -->
+        <div class="flex mb-2">
+          <button class="btn btn-primary mr-2" @click="suggestionPipeline">Suggest</button>
+          <button class="btn btn-primary" @click="updateMindmap">Accept</button>
+        </div>
+
+        <!-- Collapsible Group for Removal Buttons -->
+        <button @click="toggleOther" class="btn mb-2">Other</button>
+
+        <div>
+          <div v-if="showOther" class="flex">
+            <button class="btn btn-warning mr-2" @click="removeAllNodes">Remove All Nodes</button>
+            <button class="btn btn-warning" @click="removeAllEdges">Remove All Edges</button>
+          </div>
+        </div>
       </div>
+
       <FloatingCardList :id="mindmapId as string" />
     </VueFlow>
   </main>

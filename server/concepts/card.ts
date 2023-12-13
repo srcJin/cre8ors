@@ -34,6 +34,11 @@ export default class CardConcept {
     return await this.getCards({ content: content });
   }
 
+  async getById(_id: ObjectId) {
+    // console.log("cards.ts getById", _id);
+    return await this.card.readOne({ _id });
+  }
+
   async update(_id: ObjectId, update: Partial<CardDoc>) {
     this.sanitizeUpdate(update);
     await this.card.updateOne({ _id }, update);
