@@ -152,15 +152,33 @@ class Routes {
     await Card.isAuthor(user, _id);
     return Card.delete(_id);
   }
+
   @Router.post("/autosuggestion/suggest")
   async suggest(mapId: ObjectId) {
+    console.log("suggesting mapId", mapId);
     const cards = await Mindmap.getIdeaBlocks(mapId);
-    const cardDocs = await Promise.all(cards.map(async (card) => (await Card.getCards(card))[0]));
-    const cardContents = cardDocs.map((card) => card.content);
-    const suggestions = await Autosuggestion.suggest(cardContents);
-    const cardIds = await Promise.all(suggestions.map(async (suggestion) => (await Card.getByContent(suggestion))[0]._id));
+    // console.log("cards", cards);
+    const cardList: CardDoc[] = [];
 
-    return cardIds;
+    for (const card of cards) {
+      // console.log("Card.getById", await Card.getById(card));
+      const cardDoc = await Card.getById(card);
+      if (cardDoc && cardDoc.content) {
+        cardList.push(cardDoc);
+      }
+    }
+    // console.log("cardList", cardList);
+
+    // process the card list into an object with the card id as the key and the card content as the value
+    const cardIDContent: Record<string, string> = {};
+    for (const card of cardList) {
+      cardIDContent[card._id.toString()] = card.content;
+    }
+    // console.log("cardIDContent", cardIDContent);
+
+    const suggestions = await Autosuggestion.suggest(cardIDContent);
+    console.log("router.ts suggestion = ", suggestions?.toString());
+    return suggestions;
   }
 
   // TODO: Fix Mindmap doesn't have Mindmap.addideaBlock

@@ -21,7 +21,8 @@ onBeforeMount(async () => {
       <button class="btn btn-primary" onclick="card_modal.showModal()">Add Card</button>
       <CreateCardModal />
     </div>
-    <div class="grid grid-cols-3 gap-10 pb-20">
+    <!-- add mobile responsive -->
+    <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-20">
       <CardComponent v-for="card in cards" :key="card._id" :card="card" editable />
     </div>
   </main>
