@@ -38,7 +38,8 @@ export default class AutosuggestionConcept {
       prompt += `Node ${id}: ${nodeList[id]}\n`;
       // console.log("adding", `Node ${id}: ${nodeList[id]}\n`);
     }
-    prompt += "Generate a JSON file that suggests connections between nodes. Return a json formatted object with only the connecting node ids, strictly no other texts.";
+    prompt +=
+      "Generate a JSON file that suggests connections between nodes. Less than 5 connection each time, no repeat connections. Return a json formatted object with only the connecting node ids, strictly no other texts.";
 
     const systemMessage =
       'You are a helpful assistant designed to output JSON. Return a JSON-formatted object with only the connecting node ids, and no other text. strictly follow the example format [{"connections": [{"source": "", "target": ""},{"source": "", "target": ""}...]}]';
