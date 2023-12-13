@@ -186,77 +186,12 @@ const createNodeList = () => {
   return nodeList;
 };
 
-const GPTAPICall = async (nodeList: { [key: string]: string }) => {
-  // Convert nodeList to a string for the GPT prompt
-  const prompt = createJSONPromptFromNodeList(nodeList);
-  console.log("prompt=", prompt);
-  // OpenAI API endpoint and headers
-  const endpoint = "https://api.openai.com/v1/chat/completions/";
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: "Bearer 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",
-  };
-
-  // API request body
-  const body = {
-    model: "GPT-4", // or another model of your choice
-    messages: prompt,
-    max_tokens: 200, // Adjust as needed
-    temperature: 1.0, // Adjust for creativity
-  };
-
-  try {
-    const response = await fetchy(endpoint, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify(body),
-    });
-
-    const data = await response.json();
-
-    // Parse the JSON-formatted response
-    const connections = JSON.parse(data.choices[0].text);
-    return connections;
-  } catch (error) {
-    console.error("Error in making API call:", error);
-  }
-};
-
-const createJSONPromptFromNodeList = (nodeList: Record<string, string> | undefined) => {
-  console.log("nodeList", nodeList);
-  if (!nodeList) {
-    nodeList = createNodeList();
-  }
-  console.log("nodeList", nodeList);
-  let prompt = "Here are some mindmap node ids with their contents:\n";
-  for (const id in nodeList) {
-    prompt += `Node ${id}: ${nodeList[id]}\n`;
-    console.log("adding", `Node ${id}: ${nodeList[id]}\n`);
-  }
-  prompt += "Generate a JSON file that suggests connections between nodes. Return a json formatted object with only the connecting node ids, strictly no other texts.";
-
-  const systemMessage = "You can now generate a JSON file that suggests connections between nodes. Return a JSON-formatted object with only the connecting node ids, and no other text.";
-
-  const messages = [
-    { role: "system", content: systemMessage },
-    { role: "user", content: prompt },
-  ];
-
-  return messages;
-};
-
 const suggestionPipeline = async () => {
-  await suggestGPTConnectionBackend();
-  // const nodeList = createNodeList();
-  // if (nodeList) {
-  //   const connections = await suggestGPTConnectionBackend2(nodeList);
-  //   console.log("connections", connections);
-  // } else {
-  //   console.error("Node list is undefined.");
-  // }
+  const suggestions = await suggestGPTConnectionBackend();
+  console.log("suggestions", suggestions);
 };
 
-const suggestConnection = async () => {
+const suggestRandomConnection = async () => {
   // Filter out elements that have a 'position' property, assuming these are nodes
   const nodes = elements.value.filter((el: any) => el.position);
 

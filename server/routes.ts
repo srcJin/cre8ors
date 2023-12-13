@@ -153,21 +153,6 @@ class Routes {
     return Card.delete(_id);
   }
 
-  // @Router.post("/autosuggestion/suggest0")
-  // async suggest0(nodeList: string) {
-  //   console.log("!!!!!!suggest nodeList", nodeList);
-  //   console.log("suggesting mapId", mapId);
-  //   const cards = await Mindmap.getIdeaBlocks(mapId);
-  //   console.log("cards", cards);
-  //   const cardDocs = await Promise.all(cards.map(async (card) => (await Card.getCards(card))[0]));
-  //   // console.log("cardDocs", cardDocs);
-  //   // const cardContents = cardDocs.map((card) => card.content);
-  //   // const suggestions = await Autosuggestion.suggest(nodeList);
-  //   // const cardIds = await Promise.all(suggestions.map(async (suggestion) => (await Card.getByContent(suggestion))[0]._id));
-
-  //   return suggestions;
-  // }
-
   @Router.post("/autosuggestion/suggest")
   async suggest(mapId: ObjectId) {
     console.log("suggesting mapId", mapId);
@@ -192,7 +177,8 @@ class Routes {
     // console.log("cardIDContent", cardIDContent);
 
     const suggestions = await Autosuggestion.suggest(cardIDContent);
-    console.log("suggestions", suggestions);
+    // console.log("suggestions", suggestions);
+    return suggestions;
   }
 
   // TODO: Fix Mindmap doesn't have Mindmap.addideaBlock

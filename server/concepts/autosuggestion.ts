@@ -32,7 +32,7 @@ export default class AutosuggestionConcept {
   }
 
   createJSONPromptFromNodeList = (nodeList: Record<string, string> | undefined) => {
-    console.log("nodeList", nodeList);
+    // console.log("nodeList", nodeList);
     let prompt = "Here are some mindmap node ids with their contents:\n";
     for (const id in nodeList) {
       prompt += `Node ${id}: ${nodeList[id]}\n`;
