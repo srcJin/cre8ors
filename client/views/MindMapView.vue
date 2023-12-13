@@ -145,7 +145,7 @@ const suggestRandomConnection = () => {
   elements.value = [...elements.value, newEdge];
 };
 
-const suggestGPTConnection = async () => {
+const suggestGPTConnectionBackend = async () => {
   try {
     const requestBody = {
       mapId: mindmapId, // Use .value for reactive refs
@@ -165,6 +165,81 @@ const suggestGPTConnection = async () => {
   } catch (error) {
     console.error("Error fetching suggestions:", error);
   }
+};
+
+const createNodeList = async () => {
+  const nodes = elements.value.filter((el: any) => el.position);
+  const nodeList: { [key: string]: any } = {};
+
+  if (nodes.length < 2) {
+    console.log("Not enough nodes to form a connection");
+    return;
+  }
+
+  // create a json obj named nodeList
+  for (let i = 0; i < nodes.length; i++) {
+    // create a json obj
+    const node = nodes[i];
+    nodeList[node.data.card._id] = node.data.card.content;
+  }
+  console.log("nodeList", nodeList);
+  return nodeList;
+};
+
+const GPTAPICall = async (nodeList: { [key: string]: any }) => {
+  // Convert nodeList to a string for the GPT prompt
+  const prompt = createJSONPromptFromNodeList(nodeList);
+  console.log("prompt=", prompt);
+  // OpenAI API endpoint and headers
+  const endpoint = "https://api.openai.com/v1/chat/completions";
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: "Bearer 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",
+  };
+
+  // API request body
+  const body = {
+    model: "GPT-4", // or another model of your choice
+    prompt: prompt,
+    max_tokens: 200, // Adjust as needed
+    temperature: 1.0, // Adjust for creativity
+  };
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+
+    // Parse the JSON-formatted response
+    const connections = JSON.parse(data.choices[0].text);
+    return connections;
+  } catch (error) {
+    console.error("Error in making API call:", error);
+  }
+};
+
+const createJSONPromptFromNodeList = async (nodeList) => {
+  if (!nodeList) {
+    nodeList = await createNodeList();
+  }
+  console.log("nodeList", nodeList);
+  let prompt = "Here are some mindmap nodes with their contents:\n";
+  for (const id in nodeList) {
+    prompt += `Node ${id}: ${nodeList[id]}\n`;
+    console.log("adding", `Node ${id}: ${nodeList[id]}\n`);
+  }
+  prompt += "Generate a JSON file that suggests connections between nodes. Return a json formatted object with only the connecting node ids, strictly no other texts.";
+  return prompt;
+};
+
+const suggestionPipeline = async () => {
+  const nodeList: { [key: string]: any } = createNodeList();
+  const connections = await GPTAPICall(nodeList);
+  console.log("connections", connections);
 };
 
 const suggestConnection = async () => {
@@ -322,7 +397,7 @@ const onDrop = async (event: DragEvent) => {
 
         <!-- Suggest and Accept Buttons Line -->
         <div class="flex mb-2">
-          <button class="btn btn-primary mr-2" @click="suggestGPTConnection">Suggest</button>
+          <button class="btn btn-primary mr-2" @click="suggestionPipeline">Suggest</button>
           <button class="btn btn-primary" @click="updateMindmap">Accept</button>
         </div>
 
