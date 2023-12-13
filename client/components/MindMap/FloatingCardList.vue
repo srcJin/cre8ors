@@ -73,8 +73,9 @@ const onDragStart = (event: DragEvent, card: Card) => {
         <p class="font-semibold text-info pt-3">Drag and drop to add cards to the mind map.</p>
 
         <!-- Collapse Button -->
-        <button @click="toggleCollapse" class="btn btn-md">
-          {{ isCollapsed ? "Expand" : "Collapse" }}
+        <button @click="toggleCollapse" class="btn">
+          <img v-if="isCollapsed" src="@/assets/eva-icons/outline/arrowhead-up-outline.svg" alt="Expand" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" />
+          <img v-else src="@/assets/eva-icons/outline/arrowhead-down-outline.svg" alt="Collapse" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" />
         </button>
         <button class="btn btn-accent btn-md ml-20" @click="resetIsChecked" onclick="import_card_modal.showModal()">Import cards</button>
         <!-- here is the list of cards in import cards panel -->
