@@ -154,7 +154,7 @@ const suggestGPTConnectionBackend = async () => {
     console.log("JSON.stringify(requestBody)", JSON.stringify(requestBody));
 
     const testRequestBody = {
-      mapId: "657059f265d5150cec9e0856", // Replace with a hard-coded valid ID for testing
+      mapId: mindmapId, // Replace with a hard-coded valid ID for testing
     };
     console.log("JSON.stringify(testRequestBody)", JSON.stringify(testRequestBody));
     const response = await fetchy(`/api/autosuggestion/suggest`, "POST", {
@@ -167,7 +167,7 @@ const suggestGPTConnectionBackend = async () => {
   }
 };
 
-const createNodeList = async () => {
+const createNodeList = () => {
   const nodes = elements.value.filter((el: any) => el.position);
   const nodeList: { [key: string]: any } = {};
 
@@ -186,27 +186,27 @@ const createNodeList = async () => {
   return nodeList;
 };
 
-const GPTAPICall = async (nodeList: { [key: string]: any }) => {
+const GPTAPICall = async (nodeList: { [key: string]: string }) => {
   // Convert nodeList to a string for the GPT prompt
   const prompt = createJSONPromptFromNodeList(nodeList);
   console.log("prompt=", prompt);
   // OpenAI API endpoint and headers
-  const endpoint = "https://api.openai.com/v1/chat/completions";
+  const endpoint = "https://api.openai.com/v1/chat/completions/";
   const headers = {
     "Content-Type": "application/json",
-    Authorization: "Bearer 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",
+    Authorization: "Bearer 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",
   };
 
   // API request body
   const body = {
     model: "GPT-4", // or another model of your choice
-    prompt: prompt,
+    messages: prompt,
     max_tokens: 200, // Adjust as needed
     temperature: 1.0, // Adjust for creativity
   };
 
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetchy(endpoint, {
       method: "POST",
       headers: headers,
       body: JSON.stringify(body),
@@ -222,24 +222,38 @@ const GPTAPICall = async (nodeList: { [key: string]: any }) => {
   }
 };
 
-const createJSONPromptFromNodeList = async (nodeList) => {
+const createJSONPromptFromNodeList = (nodeList: Record<string, string> | undefined) => {
+  console.log("nodeList", nodeList);
   if (!nodeList) {
-    nodeList = await createNodeList();
+    nodeList = createNodeList();
   }
   console.log("nodeList", nodeList);
-  let prompt = "Here are some mindmap nodes with their contents:\n";
+  let prompt = "Here are some mindmap node ids with their contents:\n";
   for (const id in nodeList) {
     prompt += `Node ${id}: ${nodeList[id]}\n`;
     console.log("adding", `Node ${id}: ${nodeList[id]}\n`);
   }
   prompt += "Generate a JSON file that suggests connections between nodes. Return a json formatted object with only the connecting node ids, strictly no other texts.";
-  return prompt;
+
+  const systemMessage = "You can now generate a JSON file that suggests connections between nodes. Return a JSON-formatted object with only the connecting node ids, and no other text.";
+
+  const messages = [
+    { role: "system", content: systemMessage },
+    { role: "user", content: prompt },
+  ];
+
+  return messages;
 };
 
 const suggestionPipeline = async () => {
-  const nodeList: { [key: string]: any } = createNodeList();
-  const connections = await GPTAPICall(nodeList);
-  console.log("connections", connections);
+  await suggestGPTConnectionBackend();
+  // const nodeList = createNodeList();
+  // if (nodeList) {
+  //   const connections = await suggestGPTConnectionBackend2(nodeList);
+  //   console.log("connections", connections);
+  // } else {
+  //   console.error("Node list is undefined.");
+  // }
 };
 
 const suggestConnection = async () => {
@@ -294,29 +308,6 @@ const findConnectedNodes = async (string1: string, string2: string) => {
   const score = Math.random();
   console.log("findConnectedNodes Score:", score);
   return score;
-  // To be implemented in the backend
-  // try {
-  //   // Send the data to your backend NLP service
-  //   const response = await fetch("/api/suggest", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify(payload),
-  //   });
-
-  //   if (!response.ok) {
-  //     throw new Error(`HTTP error! status: ${response.status}`);
-  //   }
-
-  //   const { score } = await response.json();
-
-  //   // Return the relationship score from the backend
-  //   return score;
-  // } catch (error) {
-  //   console.error("Error during relationship scoring:", error);
-  //   return null; // or handle the error as needed
-  // }
 };
 
 onBeforeMount(async () => {
