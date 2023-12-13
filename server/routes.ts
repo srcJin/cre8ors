@@ -177,7 +177,7 @@ class Routes {
     // console.log("cardIDContent", cardIDContent);
 
     const suggestions = await Autosuggestion.suggest(cardIDContent);
-    // console.log("suggestions", suggestions);
+    console.log("router.ts suggestion = ", suggestions?.toString());
     return suggestions;
   }
 

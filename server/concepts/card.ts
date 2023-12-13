@@ -35,7 +35,7 @@ export default class CardConcept {
   }
 
   async getById(_id: ObjectId) {
-    console.log("cards.ts getById", _id);
+    // console.log("cards.ts getById", _id);
     return await this.card.readOne({ _id });
   }
 

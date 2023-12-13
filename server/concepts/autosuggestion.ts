@@ -58,7 +58,8 @@ export default class AutosuggestionConcept {
     // https://platform.openai.com/docs/guides/text-generation/json-mode
     const completion = await openai.chat.completions.create({
       messages: this.createJSONPromptFromNodeList(nodeList) as any,
-      model: "gpt-4-1106-preview",
+      // model: "gpt-4-1106-preview",
+      model: "gpt-3.5-turbo-1106",
       response_format: { type: "json_object" },
     });
     const result = completion.choices[0].message.content;

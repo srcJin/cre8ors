@@ -145,53 +145,7 @@ const suggestRandomConnection = () => {
   elements.value = [...elements.value, newEdge];
 };
 
-const suggestGPTConnectionBackend = async () => {
-  try {
-    const requestBody = {
-      mapId: mindmapId, // Use .value for reactive refs
-    };
-
-    console.log("JSON.stringify(requestBody)", JSON.stringify(requestBody));
-
-    const testRequestBody = {
-      mapId: mindmapId, // Replace with a hard-coded valid ID for testing
-    };
-    console.log("JSON.stringify(testRequestBody)", JSON.stringify(testRequestBody));
-    const response = await fetchy(`/api/autosuggestion/suggest`, "POST", {
-      body: testRequestBody,
-    });
-
-    console.log("response.data=", response.data);
-  } catch (error) {
-    console.error("Error fetching suggestions:", error);
-  }
-};
-
-const createNodeList = () => {
-  const nodes = elements.value.filter((el: any) => el.position);
-  const nodeList: { [key: string]: any } = {};
-
-  if (nodes.length < 2) {
-    console.log("Not enough nodes to form a connection");
-    return;
-  }
-
-  // create a json obj named nodeList
-  for (let i = 0; i < nodes.length; i++) {
-    // create a json obj
-    const node = nodes[i];
-    nodeList[node.data.card._id] = node.data.card.content;
-  }
-  console.log("nodeList", nodeList);
-  return nodeList;
-};
-
-const suggestionPipeline = async () => {
-  const suggestions = await suggestGPTConnectionBackend();
-  console.log("suggestions", suggestions);
-};
-
-const suggestRandomConnection = async () => {
+const suggestScoredConnection = async () => {
   // Filter out elements that have a 'position' property, assuming these are nodes
   const nodes = elements.value.filter((el: any) => el.position);
 
@@ -225,6 +179,53 @@ const suggestRandomConnection = async () => {
       }
     }
   }
+};
+
+const suggestGPTConnectionBackend = async () => {
+  try {
+    const requestBody = {
+      mapId: mindmapId, // Use .value for reactive refs
+    };
+
+    console.log("JSON.stringify(requestBody)", JSON.stringify(requestBody));
+
+    const testRequestBody = {
+      mapId: mindmapId, // Replace with a hard-coded valid ID for testing
+    };
+    console.log("JSON.stringify(testRequestBody)", JSON.stringify(testRequestBody));
+
+    const response = await fetchy(`/api/autosuggestion/suggest`, "POST", {
+      body: testRequestBody,
+    });
+
+    console.log("response=", JSON.parse(response));
+  } catch (error) {
+    console.error("Error fetching suggestions:", error);
+  }
+};
+
+const createNodeList = () => {
+  const nodes = elements.value.filter((el: any) => el.position);
+  const nodeList: { [key: string]: any } = {};
+
+  if (nodes.length < 2) {
+    console.log("Not enough nodes to form a connection");
+    return;
+  }
+
+  // create a json obj named nodeList
+  for (let i = 0; i < nodes.length; i++) {
+    // create a json obj
+    const node = nodes[i];
+    nodeList[node.data.card._id] = node.data.card.content;
+  }
+  console.log("nodeList", nodeList);
+  return nodeList;
+};
+
+const suggestionPipeline = async () => {
+  const suggestions = await suggestGPTConnectionBackend();
+  console.log("suggestions", suggestions);
 };
 
 const areNodesConnected = (node1: any, node2: any) => {
