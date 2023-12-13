@@ -198,34 +198,78 @@ const suggestGPTConnectionBackend = async () => {
       body: testRequestBody,
     });
 
-    console.log("response=", JSON.parse(response));
+    // console.log("response=", JSON.parse(response));
+    return JSON.parse(response);
   } catch (error) {
     console.error("Error fetching suggestions:", error);
   }
 };
 
-const createNodeList = () => {
-  const nodes = elements.value.filter((el: any) => el.position);
-  const nodeList: { [key: string]: any } = {};
+interface Connection {
+  source: string;
+  target: string;
+}
+
+interface Suggestions {
+  connections: Connection[];
+}
+
+const connectAccordingToSuggestions = (suggestions: Suggestions): void => {
+  console.log("connectAccordingToSuggestions");
+  const nodes = elements.value.filter((el: any) => "position" in el) as Node[];
 
   if (nodes.length < 2) {
     console.log("Not enough nodes to form a connection");
     return;
   }
+  console.log("nodes[0]=", nodes[0]);
 
-  // create a json obj named nodeList
-  for (let i = 0; i < nodes.length; i++) {
-    // create a json obj
-    const node = nodes[i];
-    nodeList[node.data.card._id] = node.data.card.content;
-  }
-  console.log("nodeList", nodeList);
-  return nodeList;
+  console.log("nodes[0].id=", nodes[0].data.card._id);
+
+  suggestions.connections.forEach((connection) => {
+    const sourceNode = nodes.find((node) => {
+      // For debugging
+      // console.log("node.data.card._id=", node.data.card._id);
+      // console.log("connection.source=", connection.source);
+      // console.log("is equal=", node.data.card._id === connection.source);
+      // Return the condition for the find method.
+      return node.data.card._id === connection.source;
+    });
+
+    const targetNode = nodes.find((node) => node.data.card._id === connection.target);
+
+    if (sourceNode && targetNode && !areNodesConnected(sourceNode, targetNode)) {
+      const newEdge = {
+        id: `e${sourceNode.id}-${targetNode.id}`,
+        source: sourceNode.id,
+        target: targetNode.id,
+        type: "special",
+        animated: true,
+        data: {
+          customProperty: "suggested",
+        },
+      };
+
+      elements.value = [...elements.value, newEdge];
+    }
+  });
 };
 
 const suggestionPipeline = async () => {
+  // For debugging, using sci-fi mindmap
+  //   const suggestions: Suggestions = {
+  //   connections: [
+  //     { source: "6576f69cc300c74934613ba4", target: "6576f675c300c74934613ba0" },
+  //     { source: "6576f69cc300c74934613ba4", target: "6576f657c300c74934613b9d" },
+  //     { source: "6576f692c300c74934613ba3", target: "6576f66dc300c74934613b9f" },
+  //     { source: "6576f692c300c74934613ba3", target: "6576f623c300c74934613b97" },
+  //     { source: "6576f688c300c74934613ba2", target: "6576f633c300c74934613b99" },
+  //   ],
+  // };
   const suggestions = await suggestGPTConnectionBackend();
-  console.log("suggestions", suggestions);
+
+  // console.log("suggestionPipeline suggestions=", suggestions);
+  connectAccordingToSuggestions(suggestions);
 };
 
 const areNodesConnected = (node1: any, node2: any) => {
