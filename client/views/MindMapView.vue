@@ -222,21 +222,22 @@ const connectAccordingToSuggestions = (suggestions: Suggestions): void => {
     console.log("Not enough nodes to form a connection");
     return;
   }
-  console.log("nodes[0]=", nodes[0]);
+  // console.log("nodes[0]=", nodes[0]);
 
-  console.log("nodes[0].id=", nodes[0].data.card._id);
+  // console.log("nodes[0].id=", nodes[0].data.card._id);
 
   suggestions.connections.forEach((connection) => {
-    const sourceNode = nodes.find((node) => {
-      // For debugging
-      // console.log("node.data.card._id=", node.data.card._id);
-      // console.log("connection.source=", connection.source);
-      // console.log("is equal=", node.data.card._id === connection.source);
-      // Return the condition for the find method.
-      return node.data.card._id === connection.source;
+    const sourceNode: any = nodes.find((node) => {
+      // Cast node to 'any' to access 'data' and 'id' properties
+      const anyNode: any = node;
+      return anyNode.data.card._id === connection.source;
     });
 
-    const targetNode = nodes.find((node) => node.data.card._id === connection.target);
+    const targetNode: any = nodes.find((node) => {
+      // Cast node to 'any' to access 'data' and 'id' properties
+      const anyNode: any = node;
+      return anyNode.data.card._id === connection.target;
+    });
 
     if (sourceNode && targetNode && !areNodesConnected(sourceNode, targetNode)) {
       const newEdge = {
