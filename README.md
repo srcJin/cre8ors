@@ -2,7 +2,8 @@
 
 ## Live Demo: https://cre8ors-61040.vercel.app/
 
-## Test User: user  Test Password: test
+### Test User: user
+### Test Password: test
 
 ## Getting Started
 
