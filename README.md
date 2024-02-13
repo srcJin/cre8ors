@@ -1,6 +1,9 @@
 # Cre8ors - The smartest mindmap tool
 
-https://cre8ors-61040.vercel.app/
+# Live Demo: https://cre8ors-61040.vercel.app/
+
+# Test User: user
+# Test Password: test
 
 ## Getting Started
 
